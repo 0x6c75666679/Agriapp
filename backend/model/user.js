@@ -24,6 +24,24 @@ const UserAccount = sequelize.define('User', {
             type : DataTypes.STRING,
             allowNull: false,
         },
+
+        role: {
+            type: DataTypes.ENUM('user', 'admin'),
+            defaultValue: 'user',
+            allowNull: false,
+        },
+
+        profilePicture: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: function() {
+                // Generate a random profile picture URL using DiceBear API
+                const styles = ['avataaars', 'big-ears', 'bottts', 'croodles', 'fun-emoji', 'micah', 'miniavs', 'personas'];
+                const randomStyle = styles[Math.floor(Math.random() * styles.length)];
+                const randomSeed = Math.random().toString(36).substring(2, 15);
+                return `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${randomSeed}`;
+            }
+        },
     },
     {
         timestamps: true,
