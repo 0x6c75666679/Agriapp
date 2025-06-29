@@ -8,7 +8,7 @@ PORT = process.env.PORT || 9696;
 
 app.use(cors({
     credentials: true,
-    origin:['http://localhost:5174','http://127.0.0.1']
+    origin:['http://localhost:5174','http://localhost:5173', 'http://127.0.0.1']
 })
 )
 
@@ -19,6 +19,7 @@ app.get('/' , (req , res) =>{
 });
 
 app.use('/api/user' , require('./route/userRoute'));
+app.use('/api/weather' , require('./route/weatherRoute'));
 
 
 const startServer = async() => {
