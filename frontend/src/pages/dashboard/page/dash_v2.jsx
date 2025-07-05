@@ -5,7 +5,8 @@ import {
   Menu,
   User
 } from 'lucide-react';
-import { getWeatherData, generateWeatherNote } from '../api/api';
+import { getWeatherData, generateWeatherNote } from '../../../api';
+import toast, { Toaster } from 'react-hot-toast';
 
 const conditionToAccuIcon = {
   "Sunny": 1,
@@ -175,9 +176,60 @@ const Dashboard = () => {
   const [aiWeatherNote, setAiWeatherNote] = useState('');
   const [isLoadingNote, setIsLoadingNote] = useState(false);
   const [isLoadingWeather, setIsLoadingWeather] = useState(true);
+  const [tasks, setTasks] = useState([
+    { 
+      id: 1, 
+      title: 'Irrigate South Field', 
+      description: 'Corn field needs watering',
+      completed: true, 
+      priority: 'high',
+      field: 'South Field',
+      time: '09:00 AM',
+      type: 'irrigation'
+    },
+    { 
+      id: 2, 
+      title: 'Apply fertilizer to North Field', 
+      description: 'Wheat crop needs nitrogen boost',
+      completed: false, 
+      priority: 'medium',
+      field: 'North Field',
+      time: '11:00 AM',
+      type: 'fertilization'
+    },
+    { 
+      id: 3, 
+      title: 'Check pest traps in East Field', 
+      description: 'Monitor for corn borers',
+      completed: false, 
+      priority: 'low',
+      field: 'East Field',
+      time: '02:00 PM',
+      type: 'monitoring'
+    },
+    { 
+      id: 4, 
+      title: 'Harvest ready vegetables', 
+      description: 'Tomatoes and peppers ready',
+      completed: false, 
+      priority: 'high',
+      field: 'Garden Plot',
+      time: '04:00 PM',
+      type: 'harvesting'
+    },
+    { 
+      id: 5, 
+      title: 'Schedule soil testing', 
+      description: 'West Field due for analysis',
+      completed: false, 
+      priority: 'medium',
+      field: 'West Field',
+      time: 'Tomorrow',
+      type: 'testing'
+    }
+  ]);
 
   const sidebarItems = [
-    { label: 'My Fields' },
     { label: 'Tasks' },
     { label: 'Rentals' },
     { label: 'Reports' },
@@ -187,10 +239,7 @@ const Dashboard = () => {
     { label: 'Settings' },
   ];
 
-  const tasks = [
-    { id: 1, title: 'Today Irrigation', completed: true },
-    { id: 2, title: 'Set up irrigation system', completed: false },
-  ];
+
 
   const fieldData = [
     { label: 'Cumulative Height (cm)', value: 5, color: 'bg-blue-500' },
@@ -233,8 +282,44 @@ const Dashboard = () => {
     }
   };
 
+  const handleTaskToggle = (taskId) => {
+    const updatedTasks = tasks.map(task => 
+      task.id === taskId ? { ...task, completed: !task.completed } : task
+    );
+    
+    const task = tasks.find(t => t.id === taskId);
+    const isCompleted = !task.completed;
+    
+    if (isCompleted) {
+      toast.success(`✅ Task completed: ${task.title}`, {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#10B981',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 16px',
+        },
+      });
+    } else {
+      toast('🔄 Task marked as incomplete', {
+        duration: 2000,
+        position: 'top-right',
+        style: {
+          background: '#6B7280',
+          color: '#fff',
+          borderRadius: '8px',
+          padding: '12px 16px',
+        },
+      });
+    }
+    
+    setTasks(updatedTasks);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex">
+      <Toaster />
       {/* Sidebar */}
       <div className={`bg-white shadow-lg transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
         <div className="p-4">
@@ -401,90 +486,201 @@ const Dashboard = () => {
 
             {/* Right Side Cards */}
             <div className="space-y-4">
-              <div className="bg-gradient-to-r from-[#34A853] to-[#22C55E] text-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium">Fields Overview</h3>
-                  <ChevronRight className="w-4 h-4" />
+              <div className="bg-white rounded-lg shadow-sm p-6 h-96">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">Market Prices</h3>
+                  <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium">
+                    Live
+                  </span>
                 </div>
-                <div className="text-2xl font-bold mb-1">Good</div>
-                <div className="text-sm opacity-80">Overall field condition</div>
-              </div>
-              <div className="bg-gradient-to-r from-[#F97316] to-[#EA580C] text-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium">Expenses</h3>
-                  <ChevronRight className="w-4 h-4" />
+                <div className="mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-600">Today's Trend</span>
+                    <span className="text-sm font-medium text-green-600">↗ +2.3%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-green-500 h-2 rounded-full" style={{ width: '65%' }}></div>
+                  </div>
                 </div>
-                <div className="text-2xl font-bold mb-1">$3,134.00</div>
-                <div className="text-sm opacity-80">+12% vs last month</div>
+                <div>
+                  <h4 className="font-medium mb-3 text-gray-800">Current Prices</h4>
+                  <div className="space-y-3 max-h-48 overflow-y-auto">
+                    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                          <span className="text-yellow-600 text-sm font-bold">W</span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-700">Wheat</div>
+                          <div className="text-xs text-gray-500">Per kg</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-gray-800">₹28.50</div>
+                        <div className="text-xs text-green-600">+₹1.20</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                          <span className="text-orange-600 text-sm font-bold">C</span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-700">Corn</div>
+                          <div className="text-xs text-gray-500">Per kg</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-gray-800">₹22.80</div>
+                        <div className="text-xs text-red-600">-₹0.50</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                          <span className="text-red-600 text-sm font-bold">T</span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-700">Tomatoes</div>
+                          <div className="text-xs text-gray-500">Per kg</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-gray-800">₹45.20</div>
+                        <div className="text-xs text-green-600">+₹3.10</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                          <span className="text-green-600 text-sm font-bold">P</span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-700">Peppers</div>
+                          <div className="text-xs text-gray-500">Per kg</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-gray-800">₹38.90</div>
+                        <div className="text-xs text-green-600">+₹1.80</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-center">
+                    <button className="text-sm text-[#34A853] hover:text-[#22C55E] font-medium">
+                      View All Prices
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom Row - Tasks and Forecast Growth */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Tasks</h3>
-                <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">90% Completed</span>
-              </div>
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-600">Progress</span>
-                  <span className="text-sm font-medium text-gray-800">90%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-[#34A853] h-2 rounded-full" style={{ width: '90%' }}></div>
-                </div>
-              </div>
+
+
+          {/* Task Management Section */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h4 className="font-medium mb-3 text-gray-800">Upcoming Tasks</h4>
-                <div className="space-y-3">
-                  {tasks.map(task => (
-                    <div key={task.id} className="flex items-start space-x-3">
-                      <div className={`w-4 h-4 rounded border-2 mt-1 ${
-                        task.completed ? 'bg-[#34A853] border-[#34A853]' : 'border-gray-300'
-                      }`}>
-                        {task.completed && <span className="text-white text-xs">✓</span>}
-                      </div>
-                      <span className={`text-sm ${task.completed ? 'line-through text-gray-500' : 'text-gray-700'}`}>
-                        {task.title}
-                      </span>
-                    </div>
-                  ))}
+                <h3 className="text-lg font-semibold text-gray-800">Task Management</h3>
+                <p className="text-xs text-gray-600">Organize and track your farming activities</p>
+              </div>
+              <button className="bg-[#34A853] hover:bg-[#22C55E] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                View All Tasks
+              </button>
+            </div>
+
+            {/* Task Categories */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-blue-800">Irrigation</h4>
+                  <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
+                    {tasks.filter(t => t.type === 'irrigation' && !t.completed).length}
+                  </span>
                 </div>
+                <p className="text-xs text-blue-600">Water management tasks</p>
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-green-800">Fertilization</h4>
+                  <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
+                    {tasks.filter(t => t.type === 'fertilization' && !t.completed).length}
+                  </span>
+                </div>
+                <p className="text-xs text-green-600">Nutrient application</p>
+              </div>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-yellow-800">Monitoring</h4>
+                  <span className="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full">
+                    {tasks.filter(t => t.type === 'monitoring' && !t.completed).length}
+                  </span>
+                </div>
+                <p className="text-xs text-yellow-600">Pest and health checks</p>
+              </div>
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-purple-800">Harvesting</h4>
+                  <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full">
+                    {tasks.filter(t => t.type === 'harvesting' && !t.completed).length}
+                  </span>
+                </div>
+                <p className="text-xs text-purple-600">Crop collection tasks</p>
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Weather Forecast</h3>
-                <select className="text-sm border rounded px-2 py-1 bg-gray-50">
-                  <option>Days</option>
-                  <option>Weeks</option>
-                  <option>Months</option>
-                </select>
-              </div>
-              <div className="space-y-4 mb-6">
-                {fieldData.map((item, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-gray-600">{item.label}</span>
-                      <span className="text-sm font-medium text-gray-800">{item.value}cm</span>
+
+            {/* Detailed Task List */}
+            <div className="space-y-3">
+              <h4 className="font-medium text-gray-800 mb-3">Important Tasks</h4>
+              {tasks
+                .filter(task => task.priority === 'high')
+                .slice(0, 2)
+                .map(task => (
+                  <div key={task.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div 
+                      className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer ${
+                        task.completed ? 'bg-[#34A853] border-[#34A853]' : 'border-gray-300'
+                      }`}
+                      onClick={() => handleTaskToggle(task.id)}
+                    >
+                      {task.completed && <span className="text-white text-xs">✓</span>}
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className={`h-2 rounded-full ${item.color}`} style={{ width: `${(item.value / 10) * 100}%` }}></div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-1">
+                        <span className={`font-medium ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                          {task.title}
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          task.priority === 'high' ? 'bg-red-100 text-red-700' :
+                          task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {task.priority}
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          task.type === 'irrigation' ? 'bg-blue-100 text-blue-700' :
+                          task.type === 'fertilization' ? 'bg-green-100 text-green-700' :
+                          task.type === 'monitoring' ? 'bg-yellow-100 text-yellow-700' :
+                          task.type === 'harvesting' ? 'bg-purple-100 text-purple-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {task.type}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-1">{task.description}</div>
+                      <div className="flex items-center space-x-4 text-xs text-gray-500">
+                        <span>📍 {task.field}</span>
+                        <span>🕒 {task.time}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
-              </div>
-              <div className="h-32 bg-gradient-to-r from-[#60A5FA]/10 to-[#6366F1]/10 rounded-lg p-4 flex items-center justify-center">
-                <div className="text-center text-gray-600">
-                  <div className="text-sm">Growth Chart</div>
-                  <div className="text-xs">Visual growth data would appear here</div>
-                </div>
-              </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>

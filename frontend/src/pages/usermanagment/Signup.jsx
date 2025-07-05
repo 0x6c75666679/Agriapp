@@ -1,8 +1,8 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { createUserAPI } from "../api/api";
-import agriImage from "../assets/image_login_signup.png";
-import bgImage from "../assets/background_image.png";
+import { createUserAPI } from "../../api";
+import agriImage from "../../assets/image_login_signup.png";
+import bgImage from "../../assets/background_image.png";
 
 function Register(){
 

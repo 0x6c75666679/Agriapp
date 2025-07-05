@@ -1,7 +1,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import bgImage from "../assets/background_image.png";
-import agriImage from "../assets/image_login_signup.png";
+import bgImage from "../../assets/background_image.png";
+import agriImage from "../../assets/image_login_signup.png";
 
 function Login() {
   const [formData, setFormData] = useState({
