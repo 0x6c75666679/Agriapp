@@ -1,7 +1,9 @@
-import React from 'react';
-import { Search, ChevronRight, User } from 'lucide-react';
+import React, { useContext } from 'react';
+import { ChevronRight, User } from 'lucide-react';
+import { AuthContext } from '../../../contexts/AuthContext';
 
 const Header = ({ sidebarCollapsed, setSidebarCollapsed, title }) => {
+  const { user, loading } = useContext(AuthContext);
   return (
     <header className="bg-white shadow-sm p-4 flex items-center justify-between">
       <div className="flex items-center space-x-4">
@@ -16,18 +18,18 @@ const Header = ({ sidebarCollapsed, setSidebarCollapsed, title }) => {
         )}
       </div>
 
-      <div className="flex items-center space-x-4">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input className="pl-10 w-64 p-2 border border-gray-200 rounded-lg bg-gray-50" placeholder="Search" />
-        </div>
+      <div className="flex items-center justify-end flex-1">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-[#A78B61] rounded-full flex items-center justify-center">
             <User className="w-4 h-4 text-white" />
           </div>
           <div className="text-sm text-gray-800">
-            <div className="font-medium">Hi John Doe</div>
-            <div className="text-gray-600">johndoe@email.com</div>
+            <div className="font-medium">
+              {loading ? 'Loading...' : `Hi ${user?.name || user?.username || 'User'}`}
+            </div>
+            <div className="text-gray-600">
+              {loading ? 'Loading...' : (user?.email || 'user@email.com')}
+            </div>
           </div>
         </div>
       </div>

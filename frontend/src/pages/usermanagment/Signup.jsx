@@ -1,11 +1,12 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { createUserAPI } from "../../api";
+import { useAuth } from "../../contexts/AuthContext";
 import agriImage from "../../assets/image_login_signup.png";
 import bgImage from "../../assets/background_image.png";
 
 function Register(){
-
+  const { signup } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
   const validatePassword = (password) => {
       const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -22,7 +23,9 @@ function Register(){
       setFormData({...formData,[e.target.name]:e.target.value})
   }
 
-  const submit  = async () => {
+  const submit  = async (e) => {
+    e.preventDefault();
+    
     if(formData.email === "" || formData.username === "" | formData.password === ""){
       return toast.error("please enter all field");
     }
@@ -32,19 +35,15 @@ function Register(){
     if(formData.password !== formData.confirm_password){
       return toast.error("The Password is not equal to confrm password")
     }
+    
+    setIsLoading(true);
     try{
-      const response = await createUserAPI(formData)
-      console.log(response)
-      if (response.data.success){
-        toast.success(`thank you for your registration ${formData.username}\n your email is ${formData.email}\n`);
-        console.log(response.data.message)
-        console.log("WHy is it no poping up")
-
-      } else {
-        return toast.error('error: '+ response.data.message);
-      }
+      const result = await signup(formData);
+      // The signup function in AuthContext will handle the toast messages
    } catch (error){
-     return toast.error('something went wrong!'+ error);
+     toast.error('Something went wrong! ' + error.message);
+    } finally {
+      setIsLoading(false);
     }
   }
   return (
@@ -59,10 +58,7 @@ function Register(){
             <h2 className="text-3xl md:text-4xl font-extrabold text-green-800 mb-2 text-center">AGRI APP</h2>
             <h1 className="text-2xl md:text-3xl font-bold text-green-700 mb-8 text-center">Sign Up</h1>
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                submit();
-              }}
+              onSubmit={submit}
               className="space-y-5"
             >
               <input
@@ -72,6 +68,7 @@ function Register(){
                 onChange={handleChange}
                 placeholder="Name"
                 className="w-full p-3 border border-green-200 rounded-md bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white transition-all duration-300 placeholder-brown-400 hover:ring-2 hover:ring-green-300"
+                disabled={isLoading}
               />
               <input
                 type="email"
@@ -80,6 +77,7 @@ function Register(){
                 onChange={handleChange}
                 placeholder="Email"
                 className="w-full p-3 border border-green-200 rounded-md bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white transition-all duration-300 placeholder-brown-400 hover:ring-2 hover:ring-green-300"
+                disabled={isLoading}
               />
               <input
                 type="password"
@@ -88,6 +86,7 @@ function Register(){
                 onChange={handleChange}
                 placeholder="Password"
                 className="w-full p-3 border border-green-200 rounded-md bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white transition-all duration-300 placeholder-brown-400 hover:ring-2 hover:ring-green-300"
+                disabled={isLoading}
               />
               <input
                 type="password"
@@ -96,12 +95,14 @@ function Register(){
                 onChange={handleChange}
                 placeholder="Confirm password"
                 className="w-full p-3 border border-green-200 rounded-md bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white transition-all duration-300 placeholder-brown-400 hover:ring-2 hover:ring-green-300"
+                disabled={isLoading}
               />
               <button
                 type="submit"
-                className="w-full py-3 bg-green-800 text-white font-bold text-lg rounded-md shadow-md hover:bg-green-900 transition-all duration-300 mt-2 tracking-wide transform hover:scale-105 focus:scale-105 focus:outline-none"
+                disabled={isLoading}
+                className="w-full py-3 bg-green-800 text-white font-bold text-lg rounded-md shadow-md hover:bg-green-900 transition-all duration-300 mt-2 tracking-wide transform hover:scale-105 focus:scale-105 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign Up
+                {isLoading ? "Signing up..." : "Sign Up"}
               </button>
               <div className="flex justify-center mt-4">
                 <span className="text-green-700 text-sm">Have an account?</span>

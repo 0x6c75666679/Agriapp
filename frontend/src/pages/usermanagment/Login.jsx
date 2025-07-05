@@ -1,24 +1,45 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { useAuth } from "../../contexts/AuthContext";
 import bgImage from "../../assets/background_image.png";
 import agriImage from "../../assets/image_login_signup.png";
 
 function Login() {
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const submit = async () => {
+  const submit = async (e) => {
+    e.preventDefault();
+    
     if (formData.email === "" || formData.password === "") {
       return toast.error("Please enter all fields");
     }
-    // Add your login API logic here
-    toast.success("Logged in (demo only)");
+
+    setIsLoading(true);
+    try {
+      console.log('Login form submitted');
+      const result = await login(formData.email, formData.password);
+      console.log('Login result:', result);
+      
+      if (!result.success) {
+        toast.error(result.message || "Login failed");
+      } else {
+        console.log('Login successful, should redirect to dashboard');
+      }
+    } catch (error) {
+      console.error('Login error in component:', error);
+      toast.error("Login failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -32,13 +53,8 @@ function Login() {
           <div className="w-full max-w-sm">
             <h2 className="text-3xl md:text-4xl font-extrabold text-green-800 mb-2 text-center">AGRI APP</h2>
             <h1 className="text-2xl md:text-3xl font-bold text-green-700 mb-8 text-center">Log In</h1>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                submit();
-              }}
-              className="space-y-5"
-            >
+            
+            <form onSubmit={submit} className="space-y-5">
               <input
                 type="email"
                 name="email"
@@ -46,6 +62,7 @@ function Login() {
                 onChange={handleChange}
                 placeholder="Email"
                 className="w-full p-3 border border-green-200 rounded-md bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white transition-all duration-300 placeholder-brown-400 hover:ring-2 hover:ring-green-300"
+                disabled={isLoading}
               />
               <input
                 type="password"
@@ -54,12 +71,14 @@ function Login() {
                 onChange={handleChange}
                 placeholder="Password"
                 className="w-full p-3 border border-green-200 rounded-md bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white transition-all duration-300 placeholder-brown-400 hover:ring-2 hover:ring-green-300"
+                disabled={isLoading}
               />
               <button
                 type="submit"
-                className="w-full py-3 bg-green-800 text-white font-bold text-lg rounded-md shadow-md hover:bg-green-900 transition-all duration-300 mt-2 tracking-wide transform hover:scale-105 focus:scale-105 focus:outline-none"
+                disabled={isLoading}
+                className="w-full py-3 bg-green-800 text-white font-bold text-lg rounded-md shadow-md hover:bg-green-900 transition-all duration-300 mt-2 tracking-wide transform hover:scale-105 focus:scale-105 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Log In
+                {isLoading ? "Logging in..." : "Log In"}
               </button>
               <div className="flex justify-center mt-4">
                 <span className="text-green-700 text-sm">Don't have an account?</span>

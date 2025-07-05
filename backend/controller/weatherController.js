@@ -169,8 +169,8 @@ const getWeatherForecast = async (req, res) => {
         );
 
         // Add AccuWeather icons to the response
-        const weatherDataWithIcons = addAccuWeatherIcons(response.data);
 
+        const weatherDataWithIcons = addAccuWeatherIcons(response.data);
         res.status(200).json({
             success: true,
             data: weatherDataWithIcons

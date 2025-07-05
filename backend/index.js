@@ -1,6 +1,12 @@
 const express = require('express');
 const { connectDB , sequelize } = require('./db/database');
 require("dotenv").config();
+
+// Import all models to register them with Sequelize
+require('./model/user');
+require('./model/task');
+require('./model/field');
+
 const app = express();
 const cors = require('cors')
 
@@ -20,11 +26,12 @@ app.get('/' , (req , res) =>{
 
 app.use('/api/user' , require('./route/userRoute'));
 app.use('/api/weather' , require('./route/weatherRoute'));
-
+app.use('/api/task' , require('./route/taskRoute'));
+app.use('/api/field' , require('./route/fieldRoute'));
 
 const startServer = async() => {
     await connectDB();
-    await sequelize.sync({alter:false});
+    await sequelize.sync();
 
     app.listen(PORT , () =>{
         console.log(`Server is running on port http://localhost:${PORT}`);
