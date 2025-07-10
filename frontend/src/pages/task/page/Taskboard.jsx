@@ -14,40 +14,40 @@ const getStatusInfo = (tasks, status) => {
 };
 
 const statusCards = [
-  { status: 'Planned', bgColor: 'bg-gray-100', textColor: 'text-gray-700' },
-  { status: 'Started', bgColor: 'bg-blue-100', textColor: 'text-blue-700' },
-  { status: 'In-Progress', bgColor: 'bg-yellow-100', textColor: 'text-yellow-700' },
-  { status: 'Completed', bgColor: 'bg-green-100', textColor: 'text-green-700' },
+  { status: 'Planned', bgColor: 'bg-gray-100', textColor: 'text-black' },
+  { status: 'Started', bgColor: 'bg-blue-100', textColor: 'text-black' },
+  { status: 'In-Progress', bgColor: 'bg-yellow-100', textColor: 'text-black' },
+  { status: 'Completed', bgColor: 'bg-green-100', textColor: 'text-black' },
 ];
 
 const getTaskTypes = (tasks) => [
   {
     name: "Watering",
-    color: "bg-blue-50 border-blue-200 text-blue-700",
-    badge: "bg-blue-100 text-blue-700",
+    color: "bg-blue-50 border-2 border-black text-black",
+    badge: "bg-blue-100 text-black",  
     desc: "Water management tasks",
-    count: tasks.filter(task => task.type === 'watering').length,
+    count: tasks.filter(task => task.category === 'watering').length,
   },
   {
     name: "Fertilizing",
-    color: "bg-green-50 border-green-200 text-green-700",
-    badge: "bg-green-100 text-green-700",
+    color: "bg-green-50 border-2 border-black text-black",
+    badge: "bg-green-100 text-black",
     desc: "Nutrient application",
-    count: tasks.filter(task => task.type === 'fertilization').length,
+    count: tasks.filter(task => task.category === 'fertilization').length,
   },
   {
     name: "Monitoring",
-    color: "bg-yellow-50 border-yellow-200 text-yellow-700",
-    badge: "bg-yellow-100 text-yellow-700",
+    color: "bg-yellow-50 border-2 border-black text-black",
+    badge: "bg-yellow-100 text-black",
     desc: "Pest and health checks",
-    count: tasks.filter(task => task.type === 'monitoring').length,
+    count: tasks.filter(task => task.category === 'monitoring').length,
   },
   {
     name: "Harvesting",
-    color: "bg-purple-50 border-purple-200 text-purple-700",
-    badge: "bg-purple-100 text-purple-700",
+    color: "bg-purple-50 border-2 border-black text-black",
+    badge: "bg-purple-100 text-black",
     desc: "Crop collection tasks",
-    count: tasks.filter(task => task.type === 'harvesting').length,
+    count: tasks.filter(task => task.category === 'harvesting').length,
   },
 ];
 import TaskForm from "../components/TaskForm";
@@ -172,13 +172,13 @@ const Taskboard = () => {
   const taskTypes = getTaskTypes(tasks);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex">
       <div className={`h-screen ${showDeleteDialog || showDeleteAllDialog || showUpdateModal || showCreateModal ? 'blur-sm' : ''}`}>
-        <Sidebar sidebarCollapsed={sidebarCollapsed} sidebarItems={sidebarItems} />
+        <Sidebar sidebarCollapsed={sidebarCollapsed} sidebarItems={sidebarItems} className="bg-green-100" />
       </div>
       <div className="flex-1 overflow-hidden">
-        <div className={`${showDeleteDialog || showDeleteAllDialog || showUpdateModal || showCreateModal ? 'blur-sm' : ''}`}>
-          <Header sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} title={"Task-Manager"}/>
+        <div className={`${showDeleteDialog || showDeleteAllDialog || showUpdateModal || showCreateModal ? 'blur-sm' : ''}`}> 
+          <Header sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} title={"Task-Manager"} className="bg-green-50"/>
         </div>
         <div className={`p-6 ${showDeleteDialog || showDeleteAllDialog || showUpdateModal || showCreateModal ? 'blur-sm' : ''}`}>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
@@ -186,7 +186,7 @@ const Taskboard = () => {
             <div className="flex flex-col h-full w-full gap-4">
               {/* 1. Create Task card */}
               <div className="relative h-32 w-full">
-                <div className="h-full w-full border rounded-lg p-4 flex flex-col justify-center items-center bg-white">
+                <div className="h-full w-full border-2 border-black rounded-lg p-4 flex flex-col justify-center items-center bg-white text-black">
                   <button
                     onClick={() => setShowCreateModal(true)}
                     className="text-green-700 font-semibold text-lg flex items-center justify-center focus:outline-none"
@@ -201,7 +201,7 @@ const Taskboard = () => {
                 const info = getStatusInfo(tasks, card.status);
                 return (
                   <div key={card.status} className="relative h-32 w-full">
-                    <div className={`h-full w-full border rounded-lg p-4 flex flex-col justify-center ${card.bgColor}`}>
+                    <div className={`h-full w-full border-2 border-black rounded-lg p-4 flex flex-col justify-center ${card.bgColor} text-black`}>
                       <div className="flex items-center justify-between">
                         <span className={`font-semibold text-lg ${card.textColor}`}>{card.status}</span>
                         <span className={`text-xs px-2 py-1 rounded-full font-semibold ${card.bgColor.replace('bg-', 'bg-').replace('-100', '-200')} ${card.textColor}`}>
@@ -215,7 +215,7 @@ const Taskboard = () => {
               {/* 6. Delete Task button (original position) */}
               <div className="relative h-23 w-full">
                 <div 
-                  className={`h-full w-full border rounded-lg p-4 flex flex-col justify-center items-center cursor-pointer transition-colors hover:shadow-md ${isDeleteMode ? 'bg-red-200 border-red-400' : 'bg-red-100 hover:bg-red-200'}`}
+                  className={`h-full w-full border-2 border-black rounded-lg p-4 flex flex-col justify-center items-center cursor-pointer transition-colors hover:shadow-md ${isDeleteMode ? 'bg-red-200 border-red-400' : 'bg-red-100 hover:bg-red-200'} text-black`}
                   onClick={toggleDeleteMode}
                   role="button"
                   tabIndex={0}
@@ -237,7 +237,7 @@ const Taskboard = () => {
                 {taskTypes.slice(0, 4).map((type, idx) => (
                   <div key={type.name} className="relative h-32 w-full">
                     <div
-                      className={`h-full w-full border rounded-lg p-4 flex flex-col justify-between ${type.color}`}
+                      className={`h-full w-full border-2 border-black rounded-lg p-4 flex flex-col justify-between ${type.color} text-black`}
                       style={{ minHeight: '128px' }}
                     >
                       <div className="flex items-center justify-between mb-1">

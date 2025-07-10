@@ -20,6 +20,7 @@ const TaskForm = ({ onClose, onSubmit }) => {
   });
   const [fields, setFields] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   // Fetch fields from backend on component mount
   useEffect(() => {
@@ -50,6 +51,16 @@ const TaskForm = ({ onClose, onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError("");
+    // Validate due date/time is at least 15 minutes after start date/time
+    if (form.startDate && form.dueDate) {
+      const start = new Date(`${form.startDate}T${form.startTime || "00:00"}`);
+      const due = new Date(`${form.dueDate}T${form.dueTime || "00:00"}`);
+      if (due - start < 15 * 60 * 1000) {
+        setError("Due date/time must be at least 15 minutes after start date/time.");
+        return;
+      }
+    }
     
     // Find the selected field to get additional info
     const selectedField = fields.find(f => f.value === form.field);
@@ -85,6 +96,9 @@ const TaskForm = ({ onClose, onSubmit }) => {
         <h2 className="text-xl font-bold">Create / Edit Task</h2>
         <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-700 text-2xl font-bold">×</button>
       </div>
+      {error && (
+        <div className="text-red-600 font-semibold text-center mb-2">{error}</div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Task Title */}
         <div>

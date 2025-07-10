@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getWeatherData, generateWeatherNote } from '../../../api';
+import { getTasks } from '../../../api/taskApi';
 import { Toaster } from 'react-hot-toast';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
@@ -15,28 +16,8 @@ const Dashboard = () => {
   const [aiWeatherNote, setAiWeatherNote] = useState('');
   const [isLoadingNote, setIsLoadingNote] = useState(false);
   const [isLoadingWeather, setIsLoadingWeather] = useState(true);
-  const [tasks, setTasks] = useState([
-    { 
-      id: 1, 
-      title: 'Irrigate South Field', 
-      description: 'Corn field needs watering',
-      completed: true, 
-      priority: 'high',
-      field: 'South Field',
-      time: '09:00 AM',
-      type: 'irrigation'
-    },
-    { 
-      id: 4, 
-      title: 'Harvest ready vegetables', 
-      description: 'Tomatoes and peppers ready',
-      completed: false, 
-      priority: 'high',
-      field: 'Garden Plot',
-      time: '04:00 PM',
-      type: 'harvesting'
-    },
-  ]);
+  const [tasks, setTasks] = useState([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
 
   const sidebarItems = [
     { label: 'Tasks' },
@@ -68,6 +49,23 @@ const Dashboard = () => {
     fetchWeather();
   }, []);
 
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        setLoadingTasks(true);
+        const taskData = await getTasks();
+        setTasks(taskData);
+      } catch (error) {
+        console.error("Task fetch error:", error);
+        setTasks([]); // Set empty array if API fails
+      } finally {
+        setLoadingTasks(false);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
   const generateAINote = async (weatherData) => {
     if (!weatherData) return;
     
@@ -84,16 +82,16 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex">
       <Toaster />
       
       {/* Sidebar */}
-      <Sidebar sidebarCollapsed={sidebarCollapsed} sidebarItems={sidebarItems} />
+      <Sidebar sidebarCollapsed={sidebarCollapsed} sidebarItems={sidebarItems} className="bg-green-100" />
 
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
         {/* Header */}
-        <Header sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} title={"Dashboard"}/>
+        <Header sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} title={"Dashboard"} className="bg-green-50"/>
 
         {/* Dashboard Content */}
         <div className="p-6 space-y-6 overflow-y-auto">
@@ -115,7 +113,9 @@ const Dashboard = () => {
           </div>
 
           {/* Task Management Section */}
-          <TaskManagement tasks={tasks} setTasks={setTasks} />
+          <div className="mb-10">
+            <TaskManagement tasks={tasks} setTasks={setTasks} loading={loadingTasks} />
+          </div>
         </div>
       </div>
     </div>

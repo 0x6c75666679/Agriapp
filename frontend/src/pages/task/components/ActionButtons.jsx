@@ -11,7 +11,7 @@ const ActionButtons = ({
   return (
     <div className="flex gap-4 w-full -mt-4">
       <div 
-        className={`flex-1 border-2 border-gray-300 rounded-lg h-23 flex items-center justify-center cursor-pointer transition-colors hover:shadow-md ${isUpdateTaskMode ? 'bg-purple-200 border-purple-400' : 'bg-purple-100 hover:bg-purple-200'}`}
+        className={`flex-1 border-2 border-black rounded-lg h-23 flex items-center justify-center cursor-pointer transition-colors hover:shadow-md text-black ${isUpdateTaskMode ? 'bg-purple-200 border-purple-400' : 'bg-purple-100 hover:bg-purple-200'}`}
         onClick={onUpdateTaskClick}
         role="button"
         tabIndex={0}
@@ -26,7 +26,7 @@ const ActionButtons = ({
         </span>
       </div>
       <div 
-        className={`flex-1 border-2 border-gray-300 rounded-lg h-23 flex items-center justify-center cursor-pointer transition-colors hover:shadow-md ${isUpdateMode ? 'bg-blue-200 border-blue-400' : 'bg-blue-100 hover:bg-blue-200'}`}
+        className={`flex-1 border-2 border-black rounded-lg h-23 flex items-center justify-center cursor-pointer transition-colors hover:shadow-md text-black ${isUpdateMode ? 'bg-blue-200 border-blue-400' : 'bg-blue-100 hover:bg-blue-200'}`}
         onClick={onUpdateStatusClick}
         role="button"
         tabIndex={0}
@@ -41,7 +41,7 @@ const ActionButtons = ({
         </span>
       </div>
       <div 
-        className={`flex-1 border-2 border-gray-300 rounded-lg h-23 flex items-center justify-center cursor-pointer transition-colors hover:shadow-md ${isDeleteAllMode ? 'bg-red-200 border-red-400' : 'bg-red-100 hover:bg-red-200'}`}
+        className={`flex-1 border-2 border-black rounded-lg h-23 flex items-center justify-center cursor-pointer transition-colors hover:shadow-md text-black ${isDeleteAllMode ? 'bg-red-200 border-red-400' : 'bg-red-100 hover:bg-red-200'}`}
         onClick={onDeleteAllClick}
         role="button"
         tabIndex={0}

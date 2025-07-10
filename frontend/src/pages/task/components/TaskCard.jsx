@@ -61,8 +61,8 @@ const TaskCard = ({
           <span className={`text-xs px-2 py-1 rounded-full ${getPriorityBadgeColor(task.priority)}`}>
             {task.priority}
           </span>
-          <span className={`text-xs px-2 py-1 rounded-full ${getTypeBadgeColor(task.type)}`}>
-            {task.type}
+          <span className={`text-xs px-2 py-1 rounded-full ${getTypeBadgeColor(task.category)}`}>
+            {task.category}
           </span>
         </div>
         <div className="mb-1">

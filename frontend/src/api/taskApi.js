@@ -10,34 +10,20 @@ export const getTasks = async () => {
     } catch (error) {
         console.error('Error fetching tasks:', error);
         // Return fallback tasks if API fails (without IDs - backend will assign)
+        // Show only one important task when API fails, or empty array if no tasks
         return [
             { 
                 id: 'fallback-task-1',
-                title: 'Irrigate South Field', 
-                description: 'Corn field needs watering',
-                status: 'Pending',
+                title: 'Water Tomato Field', 
+                description: 'Use drip irrigation only',
+                status: 'Started',
                 priority: 'high',
-                field: 'South Field',
+                field: 'Tomato Patch',
                 startDate: '2024-05-20',
                 startTime: '09:00',
                 dueDate: '2024-05-21',
                 dueTime: '17:00',
                 type: 'watering',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            },
-            { 
-                id: 'fallback-task-2',
-                title: 'Harvest ready vegetables', 
-                description: 'Tomatoes and peppers ready',
-                status: 'In Progress',
-                priority: 'high',
-                field: 'Garden Plot',
-                startDate: '2024-05-22',
-                startTime: '06:00',
-                dueDate: '2024-05-23',
-                dueTime: '12:00',
-                type: 'harvesting',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             }

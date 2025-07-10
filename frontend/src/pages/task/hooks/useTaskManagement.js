@@ -15,15 +15,9 @@ export const useTaskManagement = () => {
         setTasks(taskData);
       } catch (error) {
         console.error('Error fetching tasks:', error);
-        // Use fallback tasks if API fails (without IDs - backend will assign)
+        // Show only one important task when API fails, or empty array if no tasks
         setTasks([
-          { title: 'Fertilize Corn Field', status: 'Planned', priority: 'medium', type: 'fertilization', description: 'Apply NPK fertilizer', startDate: 'May 20, 2024', startTime: '08:00 AM', dueDate: 'May 21, 2024', dueTime: '05:00 PM', field: 'Corn Plot' },
-          { title: 'Plant New Seeds', status: 'Planned', priority: 'high', type: 'watering', description: 'Plant tomato seeds in greenhouse', startDate: 'May 24, 2024', startTime: '09:00 AM', dueDate: 'May 25, 2024', dueTime: '04:00 PM', field: 'Tomato Patch' },
-          { title: 'Water Tomato Field', status: 'Started', priority: 'high', type: 'watering', description: 'Use drip irrigation only', startDate: 'May 20, 2024', startTime: '09:00 AM', dueDate: 'May 21, 2024', dueTime: '17:00 PM', field: 'Tomato Patch' },
-          { title: 'Check Soil pH', status: 'Started', priority: 'low', type: 'monitoring', description: 'Test soil acidity levels', startDate: 'May 21, 2024', startTime: '10:00 AM', dueDate: 'May 22, 2024', dueTime: '11:00 AM', field: 'North Field' },
-          { title: 'Weed North Field', status: 'In-Progress', priority: 'low', type: 'weeding', description: 'Remove visible weeds', startDate: 'May 21, 2024', startTime: '08:00 AM', dueDate: 'May 22, 2024', dueTime: '11:00 AM', field: 'North Field' },
-          { title: 'Harvest Tomatoes', status: 'Completed', priority: 'high', type: 'harvesting', description: 'Pick ripe tomatoes', startDate: 'May 22, 2024', startTime: '06:00 AM', dueDate: 'May 23, 2024', dueTime: '12:00 PM', field: 'Tomato Patch' },
-          { title: 'Prepare Storage', status: 'Completed', priority: 'medium', type: 'storage', description: 'Clean and organize storage area', startDate: 'May 23, 2024', startTime: '09:00 AM', dueDate: 'May 24, 2024', dueTime: '03:00 PM', field: 'Garden Plot' },
+          { id: 'fallback-1', title: 'Water Tomato Field', status: 'Started', priority: 'high', type: 'watering', description: 'Use drip irrigation only', startDate: 'May 20, 2024', startTime: '09:00 AM', dueDate: 'May 21, 2024', dueTime: '17:00 PM', field: 'Tomato Patch' },
         ]);
       } finally {
         setLoading(false);
@@ -37,10 +31,11 @@ export const useTaskManagement = () => {
     console.log('useTaskManagement - addTask called with:', newTask);
     try {
       console.log('useTaskManagement - Making API call to create task...');
-      const createdTask = await createTask(newTask);
-      console.log('useTaskManagement - Task created successfully:', createdTask);
-      setTasks(prev => [...prev, createdTask]);
-      return createdTask;
+      await createTask(newTask);
+      // Fetch all tasks after creation to ensure state is in sync
+      const allTasks = await getTasks();
+      setTasks(allTasks);
+      return true;
     } catch (error) {
       console.error('Error creating task:', error);
       // Fallback to local creation if API fails (without ID - backend will assign)
@@ -51,21 +46,17 @@ export const useTaskManagement = () => {
       };
       console.log('useTaskManagement - Using fallback task:', taskWithId);
       setTasks(prev => [...prev, taskWithId]);
-      return taskWithId;
+      return false;
     }
   };
 
   const updateTaskById = async (taskId, updatedData) => {
     try {
-      const updatedTask = await updateTask(taskId, updatedData);
-      setTasks(prev => 
-        prev.map(task => 
-          task.id === taskId 
-            ? updatedTask
-            : task
-        )
-      );
-      return updatedTask;
+      await updateTask(taskId, updatedData);
+      // Fetch all tasks after update to ensure state is in sync
+      const allTasks = await getTasks();
+      setTasks(allTasks);
+      return true;
     } catch (error) {
       console.error('Error updating task:', error);
       // Fallback to local update if API fails
@@ -76,6 +67,7 @@ export const useTaskManagement = () => {
             : task
         )
       );
+      return false;
     }
   };
 

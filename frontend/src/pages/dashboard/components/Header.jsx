@@ -2,10 +2,10 @@ import React, { useContext } from 'react';
 import { ChevronRight, User } from 'lucide-react';
 import { AuthContext } from '../../../contexts/AuthContext';
 
-const Header = ({ sidebarCollapsed, setSidebarCollapsed, title }) => {
+const Header = ({ sidebarCollapsed, setSidebarCollapsed, title, className = "" }) => {
   const { user, loading } = useContext(AuthContext);
   return (
-    <header className="bg-white shadow-sm p-4 flex items-center justify-between">
+    <header className={`shadow-sm p-4 flex items-center justify-between ${className || 'bg-white'}`}>
       <div className="flex items-center space-x-4">
         <button
           className="p-2 hover:bg-gray-100 rounded-lg text-gray-700"

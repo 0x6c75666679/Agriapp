@@ -3,7 +3,7 @@ import { Menu, LogOut, Home, Calendar, BarChart3, TestTube, ShoppingCart, Users,
 import { useAuth } from '../../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const Sidebar = ({ sidebarCollapsed, sidebarItems }) => {
+const Sidebar = ({ sidebarCollapsed, sidebarItems, className = "" }) => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -11,7 +11,7 @@ const Sidebar = ({ sidebarCollapsed, sidebarItems }) => {
   const menuItems = [
     { label: 'Home', icon: Home, path: '/dashboard' },
     { label: 'Task Manager', icon: Calendar, path: '/taskboard' },
-    { label: 'Reports', icon: BarChart3, path: '/reports' },
+    { label: 'Field Manager', icon: BarChart3, path: '/field' },
     { label: 'Soil Testing', icon: TestTube, path: '/soil-testing' },
     { label: 'Marketplace', icon: ShoppingCart, path: '/marketplace' },
     { label: 'Community', icon: Users, path: '/community' },
@@ -27,7 +27,7 @@ const Sidebar = ({ sidebarCollapsed, sidebarItems }) => {
   };
 
   return (
-    <div className={`bg-white shadow-lg transition-all duration-300 h-screen ${sidebarCollapsed ? 'w-20' : 'w-64'}`}>
+    <div className={`shadow-lg transition-all duration-300 h-screen ${sidebarCollapsed ? 'w-20' : 'w-64'} ${className || 'bg-white'}`}>
       <div className="p-4 flex flex-col h-full">
         <div className="flex items-center mb-8">
           <div className="w-7 h-7 bg-[#34A853] rounded-lg flex items-center justify-center" style={{ width: '28px', height: '28px', minWidth: '28px', minHeight: '28px' }}>

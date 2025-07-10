@@ -11,6 +11,7 @@ import Taskboardv2 from './pages/task/page/tasv2';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './components/LandingPage';
 import { AuthProvider } from './contexts/AuthContext';
+import FieldManagement from './pages/field/FieldManagement';
 
 const App = () => {
   return (
@@ -46,6 +47,11 @@ const App = () => {
           <Route path='/taskv2' element={
             <ProtectedRoute>
               <Taskboardv2 />
+            </ProtectedRoute>
+          } />
+          <Route path='/field' element={
+            <ProtectedRoute>
+              <FieldManagement />
             </ProtectedRoute>
           } />
           
