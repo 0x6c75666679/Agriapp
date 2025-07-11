@@ -63,6 +63,20 @@ const getTasks = async (req, res) => {
     }
 }
 
+const getTasksByField = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        console.log(userId)
+        const { fieldId } = req.body;
+        console.log(fieldId)
+        const tasks = await Task.findAll({ where: { userId, fieldId } });
+        console.log(tasks)
+        res.status(200).json({ tasks });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 const statusUpdate = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -171,4 +185,4 @@ const updateTask = async (req, res) => {
     }
 }
 
-module.exports = { createTask, getTasks, statusUpdate, deleteTask, updateTask , deleteAllTasks };
+module.exports = { createTask, getTasks, statusUpdate, deleteTask, updateTask, deleteAllTasks, getTasksByField };

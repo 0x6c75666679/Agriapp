@@ -6,7 +6,7 @@ import {
 } from "../utils/taskUtils";
 import { getFields } from "../../../api/fieldApi";
 
-const UpdateTaskForm = ({ task, onClose, onConfirm }) => {
+const UpdateTaskForm = ({ task, onClose, onConfirm, initialField }) => {
   console.log('UpdateTaskForm - received task:', task);
   
   const [form, setForm] = useState({
@@ -47,44 +47,43 @@ const UpdateTaskForm = ({ task, onClose, onConfirm }) => {
   // Update form when task prop changes or when fields are loaded
   useEffect(() => {
     if (task) {
-      console.log('UpdateTaskForm - updating form with task data:', task);
-      console.log('UpdateTaskForm - available fields:', fields);
-      
+      // Debug logs
+      console.log('UpdateTaskForm - initialField:', initialField);
+      console.log('UpdateTaskForm - fields:', fields);
       // Find the matching field option for the task's field ID
       let fieldValue = "";
       if (fields.length > 0) {
         // First try to match by field ID (task.fieldId or task.field.id)
         const fieldId = task.fieldId || task.field?.id || task.field;
-        console.log('UpdateTaskForm - looking for field with ID:', fieldId);
-        
         const matchingField = fields.find(f => {
           // Match by field ID
           const idMatch = f.id === fieldId;
           // Also try matching by name as fallback (for backward compatibility)
           const nameMatch = f.label === task.field || f.value === task.field;
           const nameLowerMatch = f.label.toLowerCase() === task.field?.toLowerCase() || f.value.toLowerCase() === task.field?.toLowerCase();
-          
-          console.log('UpdateTaskForm - checking field:', f.label, 'ID:', f.id, 'against fieldId:', fieldId);
-          console.log('UpdateTaskForm - matches:', { idMatch, nameMatch, nameLowerMatch });
-          
           return idMatch || nameMatch || nameLowerMatch;
         });
-        
         fieldValue = matchingField ? matchingField.value : "";
-        console.log('UpdateTaskForm - matching field found:', matchingField);
-        console.log('UpdateTaskForm - field value to use:', fieldValue);
       } else {
-        // If fields haven't loaded yet, just use empty string
         fieldValue = "";
-        console.log('UpdateTaskForm - fields not loaded yet, field value will be set later');
       }
-      
+      // If no field is set and initialField is provided, use it
+      if (!fieldValue && initialField) {
+        // Try to match initialField to a field option by id, name, label, or value
+        const matchingInitial = fields.find(f =>
+          f.id === initialField.id ||
+          f.name === initialField.name ||
+          f.label === initialField.name ||
+          f.value === initialField.name ||
+          f.label === initialField.label ||
+          f.value === initialField.value
+        );
+        console.log('UpdateTaskForm - matchingInitial:', matchingInitial);
+        fieldValue = matchingInitial ? matchingInitial.value : initialField.name || initialField.id || initialField.label || initialField.value || "";
+      }
       // Map task category to frontend category options
       let categoryValue = task.category || "";
-      console.log('UpdateTaskForm - original task category:', categoryValue);
-      
       if (categoryValue) {
-        // Convert backend category names to frontend category names
         const categoryMapping = {
           'watering': 'Watering',
           'fertilization': 'Fertilizing',
@@ -92,27 +91,19 @@ const UpdateTaskForm = ({ task, onClose, onConfirm }) => {
           'harvesting': 'Harvesting'
         };
         categoryValue = categoryMapping[categoryValue.toLowerCase()] || categoryValue;
-        console.log('UpdateTaskForm - mapped category value:', categoryValue);
       }
-      
       // Map task priority to frontend priority options
       let priorityValue = task.priority || "";
-      console.log('UpdateTaskForm - original task priority:', priorityValue);
-      
       if (priorityValue) {
-        // Convert backend priority names to frontend priority names
         const priorityMapping = {
           'high': 'High',
           'medium': 'Medium',
           'low': 'Low'
         };
         priorityValue = priorityMapping[priorityValue.toLowerCase()] || priorityValue;
-        console.log('UpdateTaskForm - mapped priority value:', priorityValue);
       } else {
-        priorityValue = "Medium"; // Default value
+        priorityValue = "Medium";
       }
-      
-      // Format dates if they're in a different format
       const formatDateForInput = (dateStr) => {
         if (!dateStr) return "";
         try {
@@ -123,20 +114,6 @@ const UpdateTaskForm = ({ task, onClose, onConfirm }) => {
           return dateStr;
         }
       };
-      
-      console.log('UpdateTaskForm - setting form with:', {
-        title: task.title,
-        category: categoryValue,
-        field: fieldValue,
-        startDate: formatDateForInput(task.startDate),
-        startTime: task.startTime,
-        dueDate: formatDateForInput(task.dueDate),
-        dueTime: task.dueTime,
-        priority: priorityValue,
-        notes: task.description,
-        status: task.status
-      });
-      
       setForm({
         title: task.title || "",
         category: categoryValue,
@@ -150,7 +127,7 @@ const UpdateTaskForm = ({ task, onClose, onConfirm }) => {
         status: task.status || "",
       });
     }
-  }, [task, fields]);
+  }, [task, fields, initialField]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

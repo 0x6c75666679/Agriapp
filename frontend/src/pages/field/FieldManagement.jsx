@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "../dashboard/components/Sidebar";
 import Header from "../dashboard/components/Header";
 import FieldList from "./FieldList";
 import FieldForm from "./FieldForm";
 import FieldDetails from "./FieldDetails";
 import ConfirmationDialog from "../task/components/ConfirmationDialog";
+import { useDragAndDropField } from "./useDragAndDropField";
+import { getFields, createField, updateField, deleteField, deleteAllFields, updateFieldStatus } from "../../api/fieldApi";
+import { getTasks, getTasksByField } from "../../api/taskApi";
+import { taskEventEmitter } from "../../utils/taskEventEmitter";
 
 const initialFields = [
   {
@@ -52,7 +56,8 @@ const sidebarItems = [
 ];
 
 const FieldManagement = () => {
-  const [fields, setFields] = useState(initialFields);
+  const [fields, setFields] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formInitial, setFormInitial] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -67,19 +72,93 @@ const FieldManagement = () => {
   const [isDeleteMode, setIsDeleteMode] = useState(false); // for sidebar Delete Field
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false); // for Delete All
   const [isViewDetailsMode, setIsViewDetailsMode] = useState(false); // for View Details
-  const [showStatusModal, setShowStatusModal] = useState(false); // for Update Status
-  const [selectedFieldForStatus, setSelectedFieldForStatus] = useState(null); // for Update Status
   const [activeFilter, setActiveFilter] = useState(null); // for status filtering
+  const [showStatusPopup, setShowStatusPopup] = useState(false); // for status update popup
+  const [selectedFieldForStatus, setSelectedFieldForStatus] = useState(null); // field selected for status update
+  const [relatedTasks, setRelatedTasks] = useState([]); // for storing tasks related to field being deleted
+
+  // Function to refresh tasks from backend
+  const refreshTasks = async () => {
+    try {
+      await getTasks();
+      console.log('Tasks refreshed from backend');
+      // Emit event to notify all components to refresh their task state
+      taskEventEmitter.emit();
+    } catch (error) {
+      console.error('Error refreshing tasks:', error);
+    }
+  };
+
+  // Function to check if a field has related tasks using the backend endpoint
+  const checkFieldHasTasks = async (fieldId) => {
+    console.log('checkFieldHasTasks called with fieldId:', fieldId);
+    try {
+      console.log('About to call getTasksByField...');
+      const tasks = await getTasksByField(fieldId);
+      console.log(`Tasks found for field ${fieldId}:`, tasks);
+      const hasTasks = tasks && tasks.length > 0;
+      console.log('Has tasks:', hasTasks);
+      return hasTasks;
+    } catch (error) {
+      console.error('Error checking field tasks:', error);
+      // If API fails, assume there are tasks to be safe
+      return true;
+    }
+  };
+
+  // Function to get related tasks for a field
+  const getRelatedTasksForField = async (fieldId) => {
+    try {
+      const tasks = await getTasksByField(fieldId);
+      console.log(`Related tasks for field ${fieldId}:`, tasks);
+      return tasks || [];
+    } catch (error) {
+      console.error('Error getting related tasks:', error);
+      return [];
+    }
+  };
+
+  // Fetch fields from backend
+  useEffect(() => {
+    const fetchFields = async () => {
+      try {
+        setLoading(true);
+        const fieldsData = await getFields();
+        setFields(fieldsData);
+      } catch (error) {
+        console.error('Error fetching fields:', error);
+        // Fallback to initial fields if API fails
+        setFields(initialFields);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFields();
+  }, []);
 
   // Add or update field
-  const handleFormSubmit = (field) => {
-    if (field.id) {
-      setFields((prev) => prev.map((f) => (f.id === field.id ? { ...field, lastActivity: new Date().toISOString().slice(0, 10) } : f)));
-    } else {
-      setFields((prev) => [
-        ...prev,
-        { ...field, id: Date.now(), lastActivity: new Date().toISOString().slice(0, 10) },
-      ]);
+  const handleFormSubmit = async (field) => {
+    try {
+      if (field.id) {
+        // Update existing field - update local state immediately
+        setFields((prev) => prev.map((f) => (f.id === field.id ? { ...field, lastActivity: new Date().toISOString().slice(0, 10) } : f)));
+        // Then call API in background
+        await updateField(field.id, field);
+      } else {
+        // Create new field - add to local state immediately
+        const newFieldWithId = { ...field, id: Date.now(), lastActivity: new Date().toISOString().slice(0, 10) };
+        setFields((prev) => [...prev, newFieldWithId]);
+        // Then call API in background
+        await createField(field);
+      }
+      // Refresh tasks after field activity
+      await refreshTasks();
+    } catch (error) {
+      console.error('Error saving field:', error);
+      // Local state is already updated, so no need to update again
+      // Refresh tasks even if field API fails
+      await refreshTasks();
     }
   };
 
@@ -90,14 +169,42 @@ const FieldManagement = () => {
   };
 
   // Delete
-  const handleDeleteClick = (field) => {
-    setDeleteTarget(field);
-    setShowDeleteModal(true);
+  const handleDeleteClick = async (field) => {
+    console.log('handleDeleteClick called with field:', field);
+    // Check if field has related tasks using the backend endpoint
+    const hasTasks = await checkFieldHasTasks(field.id);
+    console.log('Field has tasks:', hasTasks);
+    
+    if (hasTasks) {
+      // Get related tasks to show error message
+      const tasks = await getRelatedTasksForField(field.id);
+      setRelatedTasks(tasks);
+      setDeleteTarget(field);
+      setShowDeleteModal(true);
+    } else {
+      // No tasks, proceed with deletion
+      setRelatedTasks([]);
+      setDeleteTarget(field);
+      setShowDeleteModal(true);
+    }
   };
-  const confirmDelete = () => {
-    setFields((prev) => prev.filter((f) => f.id !== deleteTarget.id));
-    setShowDeleteModal(false);
-    setDeleteTarget(null);
+  const confirmDelete = async () => {
+    try {
+      // Remove from local state immediately
+      setFields((prev) => prev.filter((f) => f.id !== deleteTarget.id));
+      // Then call API in background
+      await deleteField(deleteTarget.id);
+      // Refresh tasks after field deletion
+      await refreshTasks();
+    } catch (error) {
+      console.error('Error deleting field:', error);
+      // Local state is already updated, so no need to update again
+      // Refresh tasks even if field API fails
+      await refreshTasks();
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteTarget(null);
+    }
   };
   const cancelDelete = () => {
     setShowDeleteModal(false);
@@ -151,11 +258,55 @@ const FieldManagement = () => {
     setIsViewDetailsMode(false);
   };
   // Delete All logic
-  const openDeleteAllModal = () => setShowDeleteAllModal(true);
-  const closeDeleteAllModal = () => setShowDeleteAllModal(false);
-  const confirmDeleteAll = () => {
-    setFields([]);
+  const [fieldsWithTasks, setFieldsWithTasks] = useState([]); // for storing fields that have tasks
+  const [deletableFields, setDeletableFields] = useState([]); // for storing fields that can be deleted
+  
+  const openDeleteAllModal = async () => {
+    // Check all fields for tasks before showing modal
+    const fieldsWithTasksList = [];
+    const deletableFieldsList = [];
+    
+    for (const field of fields) {
+      const hasTasks = await checkFieldHasTasks(field.id);
+      if (hasTasks) {
+        const tasks = await getRelatedTasksForField(field.id);
+        fieldsWithTasksList.push({ ...field, tasks });
+      } else {
+        deletableFieldsList.push(field);
+      }
+    }
+    
+    setFieldsWithTasks(fieldsWithTasksList);
+    setDeletableFields(deletableFieldsList);
+    setShowDeleteAllModal(true);
+  };
+  
+  const closeDeleteAllModal = () => {
     setShowDeleteAllModal(false);
+    setFieldsWithTasks([]);
+    setDeletableFields([]);
+  };
+  
+  const confirmDeleteAll = async () => {
+    try {
+      // Only delete fields that don't have tasks
+      for (const field of deletableFields) {
+        // Remove from local state immediately
+        setFields((prev) => prev.filter((f) => f.id !== field.id));
+        // Then call API in background
+        await deleteField(field.id);
+      }
+      // Refresh tasks after deleting fields
+      await refreshTasks();
+    } catch (error) {
+      console.error('Error deleting fields:', error);
+      // Refresh tasks even if field API fails
+      await refreshTasks();
+    } finally {
+      setShowDeleteAllModal(false);
+      setFieldsWithTasks([]);
+      setDeletableFields([]);
+    }
   };
 
   // View Details logic
@@ -165,29 +316,6 @@ const FieldManagement = () => {
     setIsUpdateStatusMode(false);
     setIsDeleteAllMode(false);
     setIsDeleteMode(false);
-  };
-
-  // Update Status logic
-  const handleStatusUpdate = (field) => {
-    setSelectedFieldForStatus(field);
-    setShowStatusModal(true);
-  };
-
-  const confirmStatusUpdate = (newStatus) => {
-    if (selectedFieldForStatus) {
-      setFields((prev) => prev.map((f) => 
-        f.id === selectedFieldForStatus.id 
-          ? { ...f, status: newStatus, lastActivity: new Date().toISOString().slice(0, 10) }
-          : f
-      ));
-    }
-    setShowStatusModal(false);
-    setSelectedFieldForStatus(null);
-  };
-
-  const cancelStatusUpdate = () => {
-    setShowStatusModal(false);
-    setSelectedFieldForStatus(null);
   };
 
   // Status filtering logic
@@ -200,13 +328,67 @@ const FieldManagement = () => {
   };
 
   // Filter fields based on active filter
-  const filteredFields = activeFilter 
-    ? fields.filter(field => field.status === activeFilter)
-    : fields;
+  let filteredFields;
+  if (activeFilter) {
+    filteredFields = fields.filter(field => field.status === activeFilter);
+  } else {
+    // Only show one field per status (the first found for each status)
+    const seenStatuses = new Set();
+    filteredFields = fields.filter(field => {
+      if (!seenStatuses.has(field.status)) {
+        seenStatuses.add(field.status);
+        return true;
+      }
+      return false;
+    });
+  }
+
+  // Drag-and-drop for status update only
+  const handleFieldStatusUpdate = async (fieldId, newStatus) => {
+    try {
+      // Update local state immediately
+      setFields((prev) =>
+        prev.map((f) =>
+          f.id === fieldId ? { ...f, status: newStatus, lastActivity: new Date().toISOString().slice(0, 10) } : f
+        )
+      );
+      // Then call API in background
+      await updateFieldStatus(fieldId, newStatus);
+      // Refresh tasks after field status update
+      await refreshTasks();
+    } catch (error) {
+      console.error('Error updating field status:', error);
+      // Local state is already updated, so no need to update again
+      // Refresh tasks even if field API fails
+      await refreshTasks();
+    }
+  };
+
+  // Handle status update via popup
+  const handleStatusUpdateViaPopup = (field) => {
+    setSelectedFieldForStatus(field);
+    setShowStatusPopup(true);
+  };
+
+  // Update status from popup
+  const updateStatusFromPopup = async (newStatus) => {
+    if (selectedFieldForStatus) {
+      await handleFieldStatusUpdate(selectedFieldForStatus.id, newStatus);
+    }
+    setShowStatusPopup(false);
+    setSelectedFieldForStatus(null);
+  };
+  const {
+    draggedField,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+    handleDragLeave,
+  } = useDragAndDropField(handleFieldStatusUpdate);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex">
-      <div className={`${showForm || showDeleteModal || showDeleteAllModal || showStatusModal ? 'blur-sm' : ''} flex w-full`}>
+      <div className={`${showForm || showDeleteModal || showDeleteAllModal ? 'blur-sm' : ''} flex w-full`}>
         <Sidebar sidebarCollapsed={sidebarCollapsed} sidebarItems={sidebarItems} className="bg-green-100" />
         <div className="flex-1 overflow-hidden">
           <Header
@@ -216,6 +398,11 @@ const FieldManagement = () => {
             className="bg-green-50"
           />
           <div className="p-6">
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-lg font-semibold text-gray-600">Loading fields...</div>
+              </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
               {/* Left column: Add Field + status cards */}
               <div className="flex flex-col h-full w-full gap-4">
@@ -249,6 +436,7 @@ const FieldManagement = () => {
                             handleStatusFilter(card.status);
                           }
                         }}
+
                       >
                         <div className="flex items-center justify-between">
                           <span className={`font-semibold text-lg text-black`}>{card.status}</span>
@@ -282,18 +470,26 @@ const FieldManagement = () => {
                 ))}
               </div>
               {/* Main content: header, field list */}
-              <div className="md:col-span-4 flex flex-col gap-4 min-h-[600px] h-full">
+              <div className="md:col-span-4 flex flex-col gap-4 min-h-[600px] h-full relative">
+                
                 <section className="flex-1 flex flex-col">
                   <FieldList
                     fields={filteredFields}
                     onEdit={handleEdit}
                     onDelete={handleDeleteClick}
                     onDetails={handleDetails}
-                    onStatusUpdate={handleStatusUpdate}
                     isDeleteAllMode={isDeleteMode}
                     isUpdateMode={isUpdateMode}
                     isViewDetailsMode={isViewDetailsMode}
                     isUpdateStatusMode={isUpdateStatusMode}
+                    handleDragStart={handleDragStart}
+                    handleDragOver={handleDragOver}
+                    handleDrop={handleDrop}
+                    handleDragLeave={handleDragLeave}
+                    draggedField={draggedField}
+                    statusCards={statusCards}
+                    activeFilter={activeFilter}
+                    onStatusUpdateViaPopup={handleStatusUpdateViaPopup}
                   />
                 </section>
                 {/* Action buttons row at the bottom */}
@@ -361,6 +557,7 @@ const FieldManagement = () => {
                 </div>
               </div>
             </div>
+            )}
           </div>
         </div>
       </div>
@@ -378,44 +575,68 @@ const FieldManagement = () => {
       <ConfirmationDialog
         isOpen={showDeleteModal}
         onClose={cancelDelete}
-        onConfirm={confirmDelete}
-        title="Delete Field?"
-        message={deleteTarget ? `Are you sure you want to delete field "${deleteTarget.name}"? This cannot be undone.` : ''}
-        confirmText="Yes, Delete"
+        onConfirm={relatedTasks.length > 0 ? () => setShowDeleteModal(false) : confirmDelete}
+        title={relatedTasks.length > 0 ? "Cannot Delete Field" : "Delete Field?"}
+        message={
+          deleteTarget 
+            ? relatedTasks.length > 0
+              ? `❌ Cannot delete field "${deleteTarget.name}" because it has ${relatedTasks.length} related task(s):\n\n${relatedTasks.map(task => `• ${task.title} (${task.status})`).join('\n')}\n\nPlease delete or reassign these tasks first before deleting the field.`
+              : `Are you sure you want to delete field "${deleteTarget.name}"? This cannot be undone.`
+            : ''
+        }
+        confirmText={relatedTasks.length > 0 ? "OK" : "Yes, Delete"}
         cancelText="Cancel"
-        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        confirmButtonClass={relatedTasks.length > 0 ? "bg-gray-600 hover:bg-gray-700" : "bg-red-600 hover:bg-red-700"}
       />
       <ConfirmationDialog
         isOpen={showDeleteAllModal}
         onClose={closeDeleteAllModal}
-        onConfirm={confirmDeleteAll}
-        title="Delete All Fields?"
-        message="Are you sure you want to delete ALL fields? This cannot be undone."
-        confirmText="Yes, Delete All"
+        onConfirm={fieldsWithTasks.length > 0 ? () => setShowDeleteAllModal(false) : confirmDeleteAll}
+        title={fieldsWithTasks.length > 0 ? "Cannot Delete All Fields" : "Delete All Fields?"}
+        message={
+          fieldsWithTasks.length > 0
+            ? `❌ Cannot delete all fields because ${fieldsWithTasks.length} field(s) have related tasks:\n\n${fieldsWithTasks.map(field => `• ${field.name} (${field.tasks.length} tasks)`).join('\n')}\n\nPlease delete or reassign these tasks first before deleting the fields.`
+            : deletableFields.length > 0
+            ? `Are you sure you want to delete ${deletableFields.length} field(s)? This cannot be undone.`
+            : "No fields to delete."
+        }
+        confirmText={fieldsWithTasks.length > 0 ? "OK" : "Yes, Delete All"}
         cancelText="Cancel"
-        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        confirmButtonClass={fieldsWithTasks.length > 0 ? "bg-gray-600 hover:bg-gray-700" : "bg-red-600 hover:bg-red-700"}
       />
-      {/* Status Update Modal */}
-      {showStatusModal && selectedFieldForStatus && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl border-2 border-gray-200">
-            <h3 className="text-lg font-semibold mb-4">Update Status for "{selectedFieldForStatus.name}"</h3>
-            <p className="text-gray-600 mb-6">Select a new status for this field:</p>
-            <div className="space-y-3 mb-6">
-              {['Planting', 'Growing', 'Harvesting', 'Inactive'].map((status) => (
+      
+      {/* Status Update Popup */}
+      {showStatusPopup && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-md">
+            <h3 className="text-lg font-semibold mb-4">
+              Update Status for "{selectedFieldForStatus?.name}"
+            </h3>
+            <div className="space-y-3">
+              {statusCards.map((card) => (
                 <button
-                  key={status}
-                  onClick={() => confirmStatusUpdate(status)}
-                  className="w-full p-3 text-left border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-colors"
+                  key={card.status}
+                  className={`w-full p-3 rounded-lg border-2 transition-all duration-200 hover:shadow-md ${
+                    selectedFieldForStatus?.status === card.status
+                      ? 'border-gray-400 bg-gray-100 cursor-not-allowed'
+                      : 'border-black hover:border-blue-500 hover:bg-blue-50'
+                  }`}
+                  onClick={() => updateStatusFromPopup(card.status)}
+                  disabled={selectedFieldForStatus?.status === card.status}
                 >
-                  <span className="font-semibold">{status}</span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold">{card.status}</span>
+                    {selectedFieldForStatus?.status === card.status && (
+                      <span className="text-sm text-gray-500">Current</span>
+                    )}
+                  </div>
                 </button>
               ))}
             </div>
-            <div className="flex justify-end">
+            <div className="mt-6 flex justify-end">
               <button
-                onClick={cancelStatusUpdate}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                onClick={() => setShowStatusPopup(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
               >
                 Cancel
               </button>

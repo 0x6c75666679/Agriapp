@@ -126,4 +126,23 @@ export const deleteAllTasks = async () => {
         console.error('Error deleting all tasks:', error);
         return { success: false, error: error.message };
     }
+};
+
+// Get tasks by field
+export const getTasksByField = async (fieldId) => {
+    console.log('getTasksByField called with fieldId:', fieldId);
+    try {
+        console.log('Making request to /api/task/get-tasks-by-field with data:', { fieldId });
+        const response = await authenticatedApiRequest('/api/task/get-tasks-by-field', {
+            method: 'POST',
+            data: { 
+                fieldId:fieldId 
+            }
+        });
+        console.log('getTasksByField response:', response);
+        return response.tasks || [];
+    } catch (error) {
+        console.error('Error fetching tasks by field:', error);
+        return [];
+    }
 }; 

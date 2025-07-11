@@ -20,6 +20,10 @@ const Field = sequelize.define('Field', {
             },
             onDelete: 'CASCADE',
         },
+        location: {
+            type : DataTypes.STRING,
+            allowNull: false,
+        },
         area: {
             type : DataTypes.FLOAT,
             allowNull: false,
@@ -29,6 +33,16 @@ const Field = sequelize.define('Field', {
             type : DataTypes.STRING,
             allowNull: true,
             defaultValue: 'None',
+        },
+        status: {
+            type : DataTypes.STRING,
+            allowNull: false,
+            defaultValue: 'Planting',
+        },
+        Last_Activity: {
+            type : DataTypes.DATE,
+            allowNull: true,
+            defaultValue: null,
         },
     },
     {

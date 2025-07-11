@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getTasks, createTask, updateTask, deleteTask, updateTaskStatus, deleteAllTasks } from '../../../api/taskApi';
 import { v4 as uuidv4 } from 'uuid';
+import { taskEventEmitter } from '../../../utils/taskEventEmitter';
 
 export const useTaskManagement = () => {
   const [tasks, setTasks] = useState([]);
@@ -25,6 +26,15 @@ export const useTaskManagement = () => {
     };
 
     fetchTasks();
+
+    // Subscribe to task refresh events
+    const unsubscribe = taskEventEmitter.subscribe(() => {
+      console.log('Task refresh event received, refreshing tasks...');
+      fetchTasks();
+    });
+
+    // Cleanup subscription on unmount
+    return unsubscribe;
   }, []);
 
   const addTask = async (newTask) => {

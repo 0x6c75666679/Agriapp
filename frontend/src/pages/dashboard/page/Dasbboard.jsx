@@ -7,6 +7,7 @@ import Header from '../components/Header';
 import WeatherCard from '../components/WeatherCard';
 import MarketPricesCard from '../components/MarketPricesCard';
 import TaskManagement from '../components/TaskManagement';
+import { taskEventEmitter } from '../../../utils/taskEventEmitter';
 
 
 
@@ -64,6 +65,15 @@ const Dashboard = () => {
     };
 
     fetchTasks();
+
+    // Subscribe to task refresh events
+    const unsubscribe = taskEventEmitter.subscribe(() => {
+      console.log('Dashboard: Task refresh event received, refreshing tasks...');
+      fetchTasks();
+    });
+
+    // Cleanup subscription on unmount
+    return unsubscribe;
   }, []);
 
   const generateAINote = async (weatherData) => {

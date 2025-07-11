@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const cropOptions = ["Tomato", "Wheat", "Corn", "Rice", "Potato"];
-const statusOptions = ["Active", "Inactive"];
+
+
+const statusOptions = ["Planting", "Growing", "Harvesting", "Inactive"];
 
 const FieldForm = ({ open, onClose, onSubmit, initialData }) => {
   const [form, setForm] = useState(
@@ -10,10 +11,25 @@ const FieldForm = ({ open, onClose, onSubmit, initialData }) => {
       area: "",
       crop: "",
       location: "",
-      status: "Active",
+      status: "Planting",
       notes: "",
     }
   );
+
+  useEffect(() => {
+    if (open) {
+      setForm(
+        initialData || {
+          name: "",
+          area: "",
+          crop: "",
+          location: "",
+          status: "Planting",
+          notes: "",
+        }
+      );
+    }
+  }, [initialData, open]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,7 +45,7 @@ const FieldForm = ({ open, onClose, onSubmit, initialData }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm">
       <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-lg relative animate-fade-in">
         <button onClick={onClose} className="absolute top-3 right-3 text-2xl text-gray-400 hover:text-gray-700">×</button>
         <h2 className="text-2xl font-bold mb-4">{initialData ? "Edit Field" : "Add Field"}</h2>
@@ -46,7 +62,7 @@ const FieldForm = ({ open, onClose, onSubmit, initialData }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Area (e.g., 2 ha)</label>
+            <label className="block text-sm font-medium mb-1">Area (e.g., 2.5 ha)</label>
             <input
               type="text"
               name="area"
@@ -58,18 +74,15 @@ const FieldForm = ({ open, onClose, onSubmit, initialData }) => {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Crop</label>
-            <select
+            <input
+              type="text"
               name="crop"
               value={form.crop}
               onChange={handleChange}
               className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-green-400"
+              placeholder="Enter crop name"
               required
-            >
-              <option value="">Select crop</option>
-              {cropOptions.map((crop) => (
-                <option key={crop} value={crop}>{crop}</option>
-              ))}
-            </select>
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Location</label>

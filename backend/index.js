@@ -31,7 +31,7 @@ app.use('/api/field' , require('./route/fieldRoute'));
 
 const startServer = async() => {
     await connectDB();
-    await sequelize.sync();
+    await sequelize.sync({alter: true});
 
     app.listen(PORT , () =>{
         console.log(`Server is running on port http://localhost:${PORT}`);
