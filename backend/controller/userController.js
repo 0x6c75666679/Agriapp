@@ -2,8 +2,7 @@ const User = require('../model/user');
 const bcrypt = require('bcrypt');
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
-const fs = require('fs');
-const path = require('path');
+const { Op } = require('sequelize');
 
 // Helper function to generate default profile picture URL
 const generateDefaultProfilePicture = () => {
@@ -69,7 +68,11 @@ const login = async (req , res) => {
 
         if (user && isRight){
             const token = jwt.sign(
-                { id: user.id, role: user.role},
+                { 
+                    id: user.id, 
+                    role: user.role,
+                    tokenVersion: user.tokenVersion || 0
+                },
                 process.env.JWT,
                 {expiresIn:'24h'}
             )
@@ -145,9 +148,9 @@ const updateUser = async (req , res ) => {
 const updatePassword = async(req , res) => {
     try {
         const id = req.user.id;
-        const { password , newPassword , confirmPassowrd } = req.body;
+        const { oldPassword , newPassword } = req.body;
 
-        if (!password || !newPassword || !confirmPassowrd) {
+        if (!oldPassword || !newPassword) {
             return res.status(401).json({ message : "Please fill all the passwords "})
         }
 
@@ -157,13 +160,9 @@ const updatePassword = async(req , res) => {
             return res.status(500).json({ message : "Internal server error"})
         }
 
-        const isMatch = await bcrypt.compare(password , user.password)
+        const isMatch = await bcrypt.compare(oldPassword , user.password)
         if(!isMatch) {
             return res.status(403).json({ message : "Incorrect Password"})
-        }
-
-        if (newPassword !== confirmPassowrd) {
-            return res.status(401).json({ message: 'New password and confirm password do not match' });
         }
 
         const isNewSameAsOld = await bcrypt.compare(newPassword, user.password);
@@ -184,50 +183,6 @@ const updatePassword = async(req , res) => {
     }
 
 }
-
-const uploadProfilePicture = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        
-        if (!req.file) {
-            return res.status(400).json({ message: "No profile picture uploaded" });
-        }
-
-        const user = await User.findByPk(userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Delete old profile picture if it exists and is not a default one
-        if (user.profilePicture && !user.profilePicture.startsWith('https://api.dicebear.com')) {
-            try {
-                const oldPicturePath = path.join(__dirname, '..', user.profilePicture);
-                if (fs.existsSync(oldPicturePath)) {
-                    fs.unlinkSync(oldPicturePath);
-                }
-            } catch (error) {
-                console.log('Error deleting old profile picture:', error);
-            }
-        }
-
-        // Create the URL path for the uploaded image
-        const pathParts = req.file.destination.split('/');
-        const userFolder = pathParts[pathParts.length - 2]; // Get the user folder name (second to last part)
-        const imageUrl = `/uploads/${userFolder}/profile/${req.file.filename}`;
-        
-        // Update user with new profile picture path
-        await user.update({ profilePicture: imageUrl });
-
-        res.status(200).json({
-            message: "Profile picture uploaded successfully",
-            profilePicture: imageUrl
-        });
-
-    } catch (error) {
-        console.log('Error uploading profile picture:', error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
 
 const getUserProfile = async (req, res) => {
     try {
@@ -260,12 +215,214 @@ const getUserProfile = async (req, res) => {
     }
 };
 
+const getUsers = async (req, res) => {
+    try {
+        const users = await User.findAll();
+        res.status(200).json({ users });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Admin Statistics
+const getAdminStats = async (req, res) => {
+    try {
+        const totalUsers = await User.count();
+        const activeUsers = await User.count({ where: { role: 'user' } });
+        const inactiveUsers = await User.count({ where: { role: 'admin' } });
+        
+        // Get new users this month
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        
+        const newUsersThisMonth = await User.count({
+            where: {
+                createdAt: {
+                    [Op.gte]: startOfMonth
+                }
+            }
+        });
+
+        res.status(200).json({
+            stats: {
+                totalUsers,
+                activeUsers,
+                inactiveUsers,
+                newUsersThisMonth
+            }
+        });
+    } catch (error) {
+        console.error('Error getting admin stats:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Site Status
+const getSiteStatus = async (req, res) => {
+    try {
+        // Check database connection
+        let databaseStatus = 'online';
+        try {
+            await require('../db/database').sequelize.authenticate();
+        } catch (dbError) {
+            databaseStatus = 'offline';
+        }
+
+        const status = {
+            database: databaseStatus,
+            server: 'online',
+            api: 'online',
+            uptime: '99.9%',
+            lastMaintenance: '2024-01-15'
+        };
+
+        res.status(200).json({ status });
+    } catch (error) {
+        console.error('Error getting site status:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Get All Users (Admin)
+const getAllUsers = async (req, res) => {
+    console.log("getAllUsers")
+    try {
+        const users = await User.findAll({
+            attributes: { exclude: ['password'] }
+        });
+        res.status(200).json({ users });
+    } catch (error) {
+        console.error('Error getting all users:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Update User Role
+const updateUserRole = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { role } = req.body;
+
+        if (!['user', 'admin'].includes(role)) {
+            return res.status(400).json({ message: "Role must be 'user' or 'admin'" });
+        }
+
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Increment token version to invalidate existing tokens
+        const newTokenVersion = (user.tokenVersion || 0) + 1;
+        
+        await user.update({ 
+            role,
+            tokenVersion: newTokenVersion
+        });
+
+        res.status(200).json({ 
+            message: "User role updated successfully. User will need to log in again.",
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                tokenVersion: newTokenVersion
+            }
+        });
+    } catch (error) {
+        console.error('Error updating user role:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Delete User (Admin)
+const deleteUserAdmin = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        await user.destroy();
+        res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// System Logs
+const getSystemLogs = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 100;
+        
+        // Mock system logs (in a real app, you'd have a logs table)
+        const logs = [
+            {
+                id: 1,
+                level: 'info',
+                message: 'Server started successfully',
+                timestamp: new Date().toISOString(),
+                userId: null
+            },
+            {
+                id: 2,
+                level: 'info',
+                message: 'Database connection established',
+                timestamp: new Date(Date.now() - 60000).toISOString(),
+                userId: null
+            },
+            {
+                id: 3,
+                level: 'warn',
+                message: 'High memory usage detected',
+                timestamp: new Date(Date.now() - 120000).toISOString(),
+                userId: null
+            }
+        ].slice(0, limit);
+
+        res.status(200).json({ logs });
+    } catch (error) {
+        console.error('Error getting system logs:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Performance Metrics
+const getPerformanceMetrics = async (req, res) => {
+    try {
+        // Mock performance metrics (in a real app, you'd get these from system monitoring)
+        const metrics = {
+            cpuUsage: Math.floor(Math.random() * 30) + 10, // 10-40%
+            memoryUsage: Math.floor(Math.random() * 20) + 60, // 60-80%
+            diskUsage: Math.floor(Math.random() * 15) + 45, // 45-60%
+            responseTime: Math.floor(Math.random() * 50) + 10 // 10-60ms
+        };
+
+        res.status(200).json({ metrics });
+    } catch (error) {
+        console.error('Error getting performance metrics:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 module.exports={
     register,
     login,
     deleteUser,
     updateUser,
     updatePassword,
-    uploadProfilePicture,
-    getUserProfile
+    getUserProfile,
+    getUsers,
+    getAdminStats,
+    getSiteStatus,
+    getAllUsers,
+    updateUserRole,
+    deleteUserAdmin,
+    getSystemLogs,
+    getPerformanceMetrics
 }

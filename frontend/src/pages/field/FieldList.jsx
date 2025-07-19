@@ -1,6 +1,13 @@
 import React from "react";
 
-const FieldList = ({ fields, onEdit, onDelete, onDetails, onStatusUpdate, addButton, activeFieldColor, isDeleteAllMode, isUpdateMode, isViewDetailsMode, isUpdateStatusMode, handleDragStart, handleDragOver, handleDrop, handleDragLeave, draggedField, statusCards, activeFilter, onStatusUpdateViaPopup }) => {
+const statusCards = [
+  { status: 'Planting', bgColor: 'bg-muddy-100', textColor: 'text-black-800' },
+  { status: 'Growing', bgColor: 'bg-green-100', textColor: 'text-black-800' },
+  { status: 'Harvesting', bgColor: 'bg-yellow-100', textColor: 'text-black-800' },
+  { status: 'Inactive', bgColor: 'bg-gray-100', textColor: 'text-black-800' },
+];
+
+const FieldList = ({ fields, onEdit, onDelete, onDetails, onStatusUpdate, addButton, activeFieldColor, isDeleteAllMode, isUpdateMode, isViewDetailsMode, isUpdateStatusMode, handleDragStart, handleDragOver, handleDrop, handleDragLeave, draggedField, activeFilter, onStatusUpdateViaPopup }) => {
   // Map status to background color
   const statusBgMap = {
     Planting: 'bg-muddy-100',

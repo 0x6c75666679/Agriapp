@@ -28,16 +28,15 @@ app.use('/api/user' , require('./route/userRoute'));
 app.use('/api/weather' , require('./route/weatherRoute'));
 app.use('/api/task' , require('./route/taskRoute'));
 app.use('/api/field' , require('./route/fieldRoute'));
+app.use('/api/admin' , require('./route/adminRoute'));
 
 const startServer = async() => {
     await connectDB();
-    await sequelize.sync({alter: true});
+    await sequelize.sync({alter:false}); // No database changes after tables are created
 
     app.listen(PORT , () =>{
         console.log(`Server is running on port http://localhost:${PORT}`);
     });
-
-
 };
 
 startServer();

@@ -67,7 +67,7 @@ const getTasksByField = async (req, res) => {
     try {
         const userId = req.user.id;
         console.log(userId)
-        const { fieldId } = req.body;
+        const  fieldId  = req.body;
         console.log(fieldId)
         const tasks = await Task.findAll({ where: { userId, fieldId } });
         console.log(tasks)

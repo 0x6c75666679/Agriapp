@@ -42,6 +42,12 @@ const UserAccount = sequelize.define('User', {
                 return `https://api.dicebear.com/7.x/${randomStyle}/svg?seed=${randomSeed}`;
             }
         },
+
+        tokenVersion: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0,
+            allowNull: false,
+        },
     },
     {
         timestamps: true,

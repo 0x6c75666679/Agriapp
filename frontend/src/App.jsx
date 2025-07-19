@@ -9,9 +9,13 @@ import Dashboardv2 from './pages/dashboard/page/dash_v2';
 import Taskboard from './pages/task/page/Taskboard';
 import Taskboardv2 from './pages/task/page/tasv2';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import LandingPage from './components/LandingPage';
 import { AuthProvider } from './contexts/AuthContext';
 import FieldManagement from './pages/field/FieldManagement';
+import Profile from './pages/profile/Profile';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
 
 const App = () => {
   return (
@@ -53,6 +57,23 @@ const App = () => {
             <ProtectedRoute>
               <FieldManagement />
             </ProtectedRoute>
+          } />
+          <Route path='/profile' element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          
+          {/* Admin Routes */}
+          <Route path='/admin' element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          } />
+          <Route path='/admin/users' element={
+            <AdminRoute>
+              <UserManagement />
+            </AdminRoute>
           } />
           
           {/* Landing page */}

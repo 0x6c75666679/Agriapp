@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, LogOut, Home, Calendar, BarChart3, TestTube, ShoppingCart, Users, User } from 'lucide-react';
+import { Menu, LogOut, Home, Calendar, BarChart3, TestTube, ShoppingCart, Users, User, Shield, Settings } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -16,6 +16,12 @@ const Sidebar = ({ sidebarCollapsed, sidebarItems, className = "" }) => {
     { label: 'Marketplace', icon: ShoppingCart, path: '/marketplace' },
     { label: 'Community', icon: Users, path: '/community' },
     { label: 'Profile', icon: User, path: '/profile' },
+  ];
+
+  // Admin menu items - only show if user is admin
+  const adminMenuItems = [
+    { label: 'Admin Dashboard', icon: Shield, path: '/admin' },
+    { label: 'User Management', icon: Users, path: '/admin/users' },
   ];
 
   const handleNavigation = (path) => {
@@ -64,6 +70,46 @@ const Sidebar = ({ sidebarCollapsed, sidebarItems, className = "" }) => {
               </div>
             );
           })}
+
+          {/* Admin Section - only show if user is admin */}
+          {user?.role === 'admin' && (
+            <>
+              <div className="pt-4 pb-2">
+                {!sidebarCollapsed && (
+                  <div className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Admin
+                  </div>
+                )}
+              </div>
+              {adminMenuItems.map((item, index) => {
+                const IconComponent = item.icon;
+                const isActive = location.pathname === item.path;
+                
+                return (
+                  <div
+                    key={`admin-${index}`}
+                    onClick={() => handleNavigation(item.path)}
+                    className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                      isActive 
+                        ? 'bg-red-100 text-red-800 border-l-4 border-red-600' 
+                        : 'hover:bg-red-50 text-gray-700'
+                    }`}
+                  >
+                    <IconComponent 
+                      className="w-7 h-7 transition-all duration-300"
+                      style={{ 
+                        width: '28px', 
+                        height: '28px',
+                        minWidth: '28px',
+                        minHeight: '28px'
+                      }}
+                    />
+                    {!sidebarCollapsed && <span>{item.label}</span>}
+                  </div>
+                );
+              })}
+            </>
+          )}
         </nav>
 
         {/* Logout Button */}
