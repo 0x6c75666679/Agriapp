@@ -20,15 +20,7 @@ const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
 
-  const sidebarItems = [
-    { label: 'Tasks' },
-    { label: 'Rentals' },
-    { label: 'Reports' },
-    { label: 'Soil Testing' },
-    { label: 'Marketplace' },
-    { label: 'Community' },
-    { label: 'Settings' },
-  ];
+  // Remove sidebarItems array and references to unimplemented features
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -68,7 +60,6 @@ const Dashboard = () => {
 
     // Subscribe to task refresh events
     const unsubscribe = taskEventEmitter.subscribe(() => {
-      console.log('Dashboard: Task refresh event received, refreshing tasks...');
       fetchTasks();
     });
 
@@ -96,7 +87,7 @@ const Dashboard = () => {
       <Toaster />
       
       {/* Sidebar */}
-      <Sidebar sidebarCollapsed={sidebarCollapsed} sidebarItems={sidebarItems} className="bg-green-100" />
+      <Sidebar sidebarCollapsed={sidebarCollapsed} sidebarItems={[]} className="bg-green-100" />
 
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">

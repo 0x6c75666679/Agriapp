@@ -13,7 +13,6 @@ const generateDefaultProfilePicture = () => {
 };
 
 const register = async (req , res) => {
-    console.log(req.body)
     const { email, username , password, role = 'user' } = req.body;
 
     if ( !username || !email || !password ) {
@@ -43,7 +42,6 @@ const register = async (req , res) => {
 
     }catch (error) {
         res.status(500).json({message : "Internal server error"})
-        console.log(error) 
     }
 }
 
@@ -83,7 +81,6 @@ const login = async (req , res) => {
         }          
     }catch(err){
         res.status(500).json({message : "Internal Server Error"});
-        console.log(err)
     }
 }
 
@@ -112,16 +109,13 @@ const deleteUser   = async (req , res) => {
 
 const updateUser = async (req , res ) => {
     const id  = req.user.id;
-    console.log(id)
     const { username , email , password } = req.body;
     try {
         if (!password) {
             return res.status(401).json({ message : "Please send the password"})
         }
-        console.log(password);
 
         const user = await User.findByPk(id);
-        console.log(user)
         if (!user) {
             return res.status(500).json({ message : "Internal server error"})
         }
@@ -136,11 +130,8 @@ const updateUser = async (req , res ) => {
         await user.update(updatefields , {where: {id}})
         res.status(200).json({ message : "User has been updated"})
 
-
-
     }catch(err){
         res.status(500).json({ message : "Internal server error"})
-        console.log(err)
     }
          
 }
@@ -155,7 +146,6 @@ const updatePassword = async(req , res) => {
         }
 
         const user =  await User.findByPk(id);
-        console.log(user)
         if (!user) {
             return res.status(500).json({ message : "Internal server error"})
         }
@@ -179,7 +169,6 @@ const updatePassword = async(req , res) => {
 
     }catch(err){
         res.status(500).json({ message : "Internal server error"})
-        console.log(err)
     }
 
 }
@@ -210,7 +199,6 @@ const getUserProfile = async (req, res) => {
         });
 
     } catch (error) {
-        console.log('Error getting user profile:', error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -224,69 +212,10 @@ const getUsers = async (req, res) => {
     }
 };
 
-// Admin Statistics
-const getAdminStats = async (req, res) => {
-    try {
-        const totalUsers = await User.count();
-        const activeUsers = await User.count({ where: { role: 'user' } });
-        const inactiveUsers = await User.count({ where: { role: 'admin' } });
-        
-        // Get new users this month
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
-        
-        const newUsersThisMonth = await User.count({
-            where: {
-                createdAt: {
-                    [Op.gte]: startOfMonth
-                }
-            }
-        });
 
-        res.status(200).json({
-            stats: {
-                totalUsers,
-                activeUsers,
-                inactiveUsers,
-                newUsersThisMonth
-            }
-        });
-    } catch (error) {
-        console.error('Error getting admin stats:', error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-// Site Status
-const getSiteStatus = async (req, res) => {
-    try {
-        // Check database connection
-        let databaseStatus = 'online';
-        try {
-            await require('../db/database').sequelize.authenticate();
-        } catch (dbError) {
-            databaseStatus = 'offline';
-        }
-
-        const status = {
-            database: databaseStatus,
-            server: 'online',
-            api: 'online',
-            uptime: '99.9%',
-            lastMaintenance: '2024-01-15'
-        };
-
-        res.status(200).json({ status });
-    } catch (error) {
-        console.error('Error getting site status:', error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
 
 // Get All Users (Admin)
 const getAllUsers = async (req, res) => {
-    console.log("getAllUsers")
     try {
         const users = await User.findAll({
             attributes: { exclude: ['password'] }
@@ -355,60 +284,7 @@ const deleteUserAdmin = async (req, res) => {
     }
 };
 
-// System Logs
-const getSystemLogs = async (req, res) => {
-    try {
-        const limit = parseInt(req.query.limit) || 100;
-        
-        // Mock system logs (in a real app, you'd have a logs table)
-        const logs = [
-            {
-                id: 1,
-                level: 'info',
-                message: 'Server started successfully',
-                timestamp: new Date().toISOString(),
-                userId: null
-            },
-            {
-                id: 2,
-                level: 'info',
-                message: 'Database connection established',
-                timestamp: new Date(Date.now() - 60000).toISOString(),
-                userId: null
-            },
-            {
-                id: 3,
-                level: 'warn',
-                message: 'High memory usage detected',
-                timestamp: new Date(Date.now() - 120000).toISOString(),
-                userId: null
-            }
-        ].slice(0, limit);
 
-        res.status(200).json({ logs });
-    } catch (error) {
-        console.error('Error getting system logs:', error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-// Performance Metrics
-const getPerformanceMetrics = async (req, res) => {
-    try {
-        // Mock performance metrics (in a real app, you'd get these from system monitoring)
-        const metrics = {
-            cpuUsage: Math.floor(Math.random() * 30) + 10, // 10-40%
-            memoryUsage: Math.floor(Math.random() * 20) + 60, // 60-80%
-            diskUsage: Math.floor(Math.random() * 15) + 45, // 45-60%
-            responseTime: Math.floor(Math.random() * 50) + 10 // 10-60ms
-        };
-
-        res.status(200).json({ metrics });
-    } catch (error) {
-        console.error('Error getting performance metrics:', error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
 
 module.exports={
     register,
@@ -418,11 +294,7 @@ module.exports={
     updatePassword,
     getUserProfile,
     getUsers,
-    getAdminStats,
-    getSiteStatus,
     getAllUsers,
     updateUserRole,
-    deleteUserAdmin,
-    getSystemLogs,
-    getPerformanceMetrics
+    deleteUserAdmin
 }

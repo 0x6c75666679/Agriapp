@@ -16,9 +16,6 @@ const sidebarItems = [
   { label: 'Home' },
   { label: 'Task Manager' },
   { label: 'Field Manager' },
-  { label: 'Soil Testing' },
-  { label: 'Marketplace' },
-  { label: 'Community' },
   { label: 'Profile' },
 ];
 

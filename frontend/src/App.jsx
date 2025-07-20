@@ -5,9 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import Login from './pages/usermanagment/Login';
 import Dashboard from './pages/dashboard/page/Dasbboard';
 import Forecast from './pages/dashboard/page/forecast';
-import Dashboardv2 from './pages/dashboard/page/dash_v2';
 import Taskboard from './pages/task/page/Taskboard';
-import Taskboardv2 from './pages/task/page/tasv2';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import LandingPage from './components/LandingPage';
@@ -38,19 +36,9 @@ const App = () => {
               <Forecast />
             </ProtectedRoute>
           } />
-          <Route path='/dashboardv2' element={
-            <ProtectedRoute>
-              <Dashboardv2 />
-            </ProtectedRoute>
-          } />
           <Route path='/taskboard' element={
             <ProtectedRoute>
               <Taskboard />
-            </ProtectedRoute>
-          } />
-          <Route path='/taskv2' element={
-            <ProtectedRoute>
-              <Taskboardv2 />
             </ProtectedRoute>
           } />
           <Route path='/field' element={

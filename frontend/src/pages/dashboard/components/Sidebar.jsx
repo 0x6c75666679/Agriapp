@@ -12,9 +12,6 @@ const Sidebar = ({ sidebarCollapsed, sidebarItems, className = "" }) => {
     { label: 'Home', icon: Home, path: '/dashboard' },
     { label: 'Task Manager', icon: Calendar, path: '/taskboard' },
     { label: 'Field Manager', icon: BarChart3, path: '/field' },
-    { label: 'Soil Testing', icon: TestTube, path: '/soil-testing' },
-    { label: 'Marketplace', icon: ShoppingCart, path: '/marketplace' },
-    { label: 'Community', icon: Users, path: '/community' },
     { label: 'Profile', icon: User, path: '/profile' },
   ];
 

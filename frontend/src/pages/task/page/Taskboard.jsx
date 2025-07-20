@@ -66,11 +66,8 @@ const Taskboard = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const sidebarItems = [
     { label: 'Home' },
-    { label: 'Rentals' },
-    { label: 'Reports' },
-    { label: 'Soil Testing' },
-    { label: 'Marketplace' },
-    { label: 'Community' },
+    { label: 'Task Manager' },
+    { label: 'Field Manager' },
     { label: 'Profile' },
   ];
 
@@ -102,13 +99,10 @@ const Taskboard = () => {
 
   const handleDeleteTask = () => {
     if (selectedTask && selectedTask.id) {
-      console.log('Taskboard - handleDeleteTask called with selectedTask:', selectedTask);
-      console.log('Taskboard - selectedTask.id:', selectedTask.id);
       deleteTask(selectedTask.id);
       setShowDeleteDialog(false);
       setSelectedTask(null);
     } else {
-      console.error('Taskboard - Cannot delete task: No ID found in selectedTask:', selectedTask);
       alert('Cannot delete task: Task ID not found. Please refresh and try again.');
     }
   };

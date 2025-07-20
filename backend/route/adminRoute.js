@@ -10,21 +10,9 @@ router.get('/dashboard', verifyAdmin, (req, res) => {
     });
 });
 
-// Admin statistics
-router.get('/stats', verifyAdmin, userController.getAdminStats);
-
-// Admin status
-router.get('/status', verifyAdmin, userController.getSiteStatus);
-
 // Admin user management
 router.get('/users', verifyAdmin, userController.getAllUsers);
 router.put('/users/:userId/role', verifyAdmin, userController.updateUserRole);
 router.delete('/users/:userId', verifyAdmin, userController.deleteUserAdmin);
-
-// Admin logs
-router.get('/logs', verifyAdmin, userController.getSystemLogs);
-
-// Admin performance
-router.get('/performance', verifyAdmin, userController.getPerformanceMetrics);
 
 module.exports = router; 

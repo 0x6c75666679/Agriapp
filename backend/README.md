@@ -1,125 +1,132 @@
-# AgriApp Backend
+# AgriApp – Features Documentation
 
-## Overview
-This is the backend for AgriApp, a farm management platform. It provides APIs for user authentication, field management, task scheduling, and integration with AI services for soil and crop analysis.
+## 1. User Authentication & Authorization
 
----
+**Purpose:**  
+Securely manage user access to the platform.
 
-## Project Structure
-
-```
-backend/
-  controller/         # Route handler logic (business logic)
-    fieldmanagment.js
-    taskMangment.js
-    userController.js
-    userfeatures.js
-    weatherController.js
-  db/
-    database.js       # Sequelize DB connection
-  middleware/
-    jwtVerify.js      # JWT authentication middleware
-    multer.js         # File upload middleware
-  model/              # Sequelize models (DB tables)
-    field.js
-    task.js
-    user.js
-  route/              # Express route definitions
-    fieldRoute.js
-    taskRoute.js
-    userRoute.js
-    weatherRoute.js
-  index.js            # Main server entry point
-  package.json        # Dependencies
-```
+**How it works:**  
+- Users can register and log in using their email and password.
+- Upon login, users receive a JWT (JSON Web Token) which must be included in the `Authorization` header for all protected API requests.
+- The backend verifies the token on each request and attaches user info to the request object.
+- Supports role-based access (e.g., `user`, `admin`).
 
 ---
 
-## Main Features
+## 2. Field Management
 
-- **User Authentication**: JWT-based login and registration
-- **Field Management**: Users can create, view, and manage their own fields
-- **Task Management**: Users can create, update, and delete tasks for their fields
-- **AI Integration**: Analyze soil/crop images using external APIs (HuggingFace, Plant.id)
-- **Role-based Data**: All data is linked to the authenticated user
+**Purpose:**  
+Allow users to manage their agricultural fields.
 
----
-
-## How the Backend Works
-
-### 1. **Authentication**
-- Users register and login via `/api/user/register` and `/api/user/login`.
-- On login, a JWT token is issued and must be sent in the `Authorization` header for protected routes.
-- The `jwtVerify.js` middleware checks the token and attaches the user info to `req.user`.
-
-### 2. **Field Management**
-- Each field has a unique name **per user** (enforced by a composite unique constraint on `userId` + `name`).
-- Fields are created via `/api/field/create` (POST, JWT required).
-- Users can only access and manage their own fields.
-
-### 3. **Task Management**
-- Tasks are linked to both a user and a field (foreign keys: `userId`, `fieldId`).
-- When creating/updating a task, the frontend sends the field name; the backend looks up the field ID for the current user.
-- Tasks can be created, updated, deleted, and listed via `/api/task/*` endpoints.
-- Only the owner can modify their tasks.
-
-### 4. **AI Integration**
-- Users can upload images for soil/crop analysis.
-- The backend encodes the image and sends it to external APIs (HuggingFace, Plant.id) and returns the results.
+**How it works:**  
+- Users can create, view, update, and delete their own fields.
+- Each field has a unique name per user, enforced by a database constraint.
+- Fields store information such as name, area, crop, location, status, and last activity.
+- Only the owner of a field can modify or delete it.
 
 ---
 
-## Code Quality & Understanding
+## 3. Task Management
 
-- **Comments**: Key functions and tricky logic are commented for clarity.
-- **Descriptive Naming**: Variables and functions are named for easy understanding.
-- **Modular Structure**: Code is organized by feature (controllers, models, routes, middleware).
-- **Security**: All sensitive actions require JWT authentication.
-- **Database Normalization**: Foreign keys and unique constraints ensure data integrity.
+**Purpose:**  
+Enable users to organize and track tasks related to their fields.
 
----
-
-## Example: Creating a Task
-
-1. **Frontend** sends:
-   ```json
-   {
-     "title": "Water Tomato Field",
-     "type": "watering",
-     "field": "Tomato Patch",
-     "startDate": "2024-05-20",
-     "startTime": "09:00",
-     "dueDate": "2024-05-21",
-     "dueTime": "17:00",
-     "priority": "high",
-     "status": "Pending",
-     "description": "Use drip irrigation"
-   }
-   ```
-2. **Backend**:
-   - Looks up the field by name for the current user
-   - Creates the task with the correct `fieldId` and `userId`
-   - Returns the created task
+**How it works:**  
+- Users can create, update, delete, and list tasks.
+- Each task is linked to a specific field and user.
+- Tasks include details like title, type (watering, fertilization, etc.), start/due dates and times, priority, status, and description.
+- Only the owner can modify or delete their tasks.
 
 ---
 
-## How to Read the Code
+## 4. Weather Data & AI Recommendations
 
-- **Start with `index.js`**: See how the server is set up and routes are registered.
-- **Check `model/`**: Understand the database structure (User, Field, Task).
-- **Look at `controller/`**: See the business logic for each feature.
-- **Review `route/`**: See how endpoints are mapped to controller functions.
-- **Middleware**: See how authentication and file uploads are handled.
+**Purpose:**  
+Provide users with weather information and AI-generated farming advice.
 
----
-
-## Presenting in Viva
-- Explain the flow: user logs in → gets JWT → creates fields/tasks → can only access their own data.
-- Highlight security: JWT, per-user data, unique field names per user.
-- Mention AI integration for advanced features.
-- Point out code organization and comments for maintainability.
+**How it works:**  
+- The backend fetches weather data from a third-party API (WeatherAPI.com).
+- Endpoints allow users to get current weather, forecasts, and detailed weather data for their location.
+- The backend can generate AI-powered notes and recommendations based on weather conditions (e.g., irrigation advice, warnings).
+- All weather endpoints require JWT authentication, and API keys are kept secure on the backend.
 
 ---
 
-## Need More?
-If you want inline comments or function-level docstrings in any specific file, let me know which one and I’ll add them for you! 
+## 5. Admin Features
+
+**Purpose:**  
+Allow administrators to manage users and their roles.
+
+**How it works:**  
+- Admins can view all users, update user roles, and delete users.
+- Changing a user's role invalidates their current JWT token (they must log in again).
+- Only users with the `admin` role can access admin endpoints.
+
+---
+
+## 6. Frontend Features
+
+**Purpose:**  
+Provide a modern, user-friendly interface for all platform features.
+
+**How it works:**  
+- Built with React and Tailwind CSS for a responsive, mobile-friendly experience.
+- Includes authentication UI (login, registration).
+- Dashboard displays an overview of fields, tasks, and weather.
+- Field and task management UIs allow full CRUD operations.
+- Profile management for viewing and updating user info.
+- Admin dashboard for user management.
+- Weather data and AI notes are displayed in the UI.
+- User feedback is provided via toasts and alerts.
+
+---
+
+## 7. Security & Code Quality
+
+**Purpose:**  
+Ensure the platform is secure, maintainable, and reliable.
+
+**How it works:**  
+- Passwords are hashed using bcrypt.
+- JWT tokens are used for authentication and authorization.
+- API keys are never exposed to the frontend.
+- Code is organized by feature (controllers, models, routes, middleware).
+- Descriptive naming and comments are used throughout the codebase.
+- Database normalization and constraints ensure data integrity.
+
+---
+
+## 8. Example User Flow
+
+1. User registers and logs in.
+2. User creates a field (e.g., "Tomato Patch").
+3. User creates a task for that field (e.g., "Water Tomato Field").
+4. User checks weather and receives AI-powered recommendations.
+5. Admin logs in and manages users as needed.
+
+---
+
+## 9. How to Explore the Code
+
+- **Backend:**  
+  - `index.js`: Server setup and route registration.
+  - `model/`: Database schema (User, Field, Task).
+  - `controller/`: Business logic for each feature.
+  - `route/`: API endpoint definitions.
+  - `middleware/`: Authentication and other middleware.
+
+- **Frontend:**  
+  - `src/pages/`: Main pages (dashboard, admin, profile, etc.).
+  - `src/components/`: Reusable UI components.
+  - `src/api/`: API utility functions for backend communication.
+
+---
+
+## 10. Not Implemented (as of now)
+
+- **Soil/Crop Image Analysis:**  
+  While mentioned in some documentation, actual endpoints and UI for uploading and analyzing soil/crop images are **not implemented** in the current codebase.
+
+---
+
+**This documentation provides a clear, structured overview of all implemented features in AgriApp.** 

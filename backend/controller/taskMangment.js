@@ -15,7 +15,6 @@ const createTask = async (req, res) => {
             priority, 
             status 
         } = req.body;
-        console.log(req.body);
         
         if (!title || !fieldName || !startDate || !dueDate) {
             return res.status(400).json({ message: "Please fill all required parameters" });
@@ -66,11 +65,8 @@ const getTasks = async (req, res) => {
 const getTasksByField = async (req, res) => {
     try {
         const userId = req.user.id;
-        console.log(userId)
         const  fieldId  = req.body;
-        console.log(fieldId)
         const tasks = await Task.findAll({ where: { userId, fieldId } });
-        console.log(tasks)
         res.status(200).json({ tasks });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -96,7 +92,6 @@ const statusUpdate = async (req, res) => {
 const deleteTask = async (req, res) => {
     try {
         const userId = req.user.id;
-        console.log(req.body);
         const { id } = req.body;
         const task = await Task.findOne({ where: { userId, id } });
         if (!task) {
