@@ -6,7 +6,7 @@ const { verify, verifyAdmin } = require('../middleware/jwtVerify');
 // Public routes
 router.post('/register', userController.register);
 router.post('/login', userController.login);
-router.get('/get-users', verifyAdmin, userController.getUsers);
+router.get('/get-users', verifyAdmin, userController.getAllUsers);
 
 // Protected routes (require JWT token)
 router.delete('/delete', verify, userController.deleteUser);

@@ -202,7 +202,7 @@ const FieldManagement = () => {
                       onEdit={handleEdit}
                       onDelete={handleDeleteClick}
                       onDetails={openDetails}
-                      isDeleteAllMode={isDeleteMode}
+                      isDeleteAllMode={isDeleteAllMode}
                       isUpdateMode={isUpdateMode}
                       isViewDetailsMode={isViewDetailsMode}
                       isUpdateStatusMode={isUpdateStatusMode}
